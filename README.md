@@ -6,7 +6,7 @@
 FlowGuard is a lightweight backend engine designed for manufacturing plants and commercial logistics hubs to ingest real-time conveyor belt telemetry, monitor throughput bottlenecks, and detect predictive anomalies using sliding-window statistical analysis. 
 
 ## Tech Stack
-* **Runtime:** Node.js / TypeScript (or Java)
+* **Runtime:** Node.js / TypeScript
 * **Architecture:** Clean Architecture / Layered Domain Services
 * **Persistence:** PostgreSQL (with strict transactional constraints)
 * **API:** RESTful JSON API (Contract-First design)
