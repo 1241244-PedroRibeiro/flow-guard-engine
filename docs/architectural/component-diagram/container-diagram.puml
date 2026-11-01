@@ -1,0 +1,75 @@
+@startuml
+!pragma layout smetana
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 70
+
+skinparam person {
+  BackgroundColor #E2EAFC
+  BorderColor #2B2D42
+}
+
+skinparam rectangle {
+  BackgroundColor #F8F9FA
+  BorderColor #2B2D42
+}
+
+skinparam database {
+  BackgroundColor #D8F3DC
+  BorderColor #2B2D42
+}
+
+title Container Diagram (C4 Level 2) - FlowGuard Telemetry Engine
+
+' Actors & External Systems
+person "Plant Operator" as Operator
+person "Industrial Engineer" as Engineer
+person "System Administrator" as Admin
+
+rectangle "Industrial IoT Sensor Gateways\n[External Hardware / Edge Controllers]" as Gateways #FFF3BF
+rectangle "External Webhook Receivers\n[External Incident / Maintenance Systems]" as Webhooks #FFD8A8
+rectangle "Prometheus Scraper\n[External Monitoring Infrastructure]" as Prometheus #D8F5A2
+
+rectangle "FlowGuard System Boundary" {
+
+  rectangle "Operations & Engineering Dashboard (SPA)\n[Container: Web Client / Bruno API Harness]" as ClientApp #E0E7FF {
+    note right of ClientApp
+      Interactive web client and declarative
+      API client suite providing operational views
+      for operators, engineers, and administrators.
+    end note
+  }
+
+  rectangle "FlowGuard Back-End Modular Monolith\n[Container: Node.js / NestJS / TypeScript]" as BackEnd #C7D2FE {
+    note left of BackEnd
+      Clean Architecture REST API container.
+      Executes stateless JWT/RBAC auth, in-memory
+      sliding-window statistical filtering (Ring Buffers),
+      topological governance, and alert orchestration.
+    end note
+  }
+
+  database "Relational Database\n[Container: PostgreSQL 16+]" as DB #D8F3DC {
+    note bottom of DB
+      Stores users, plant sectors, conveyor lines,
+      sensor nodes, threshold rules, enriched telemetry,
+      anomaly alerts, spare-part stock, and CQRS SQL Views.
+    end note
+  }
+}
+
+' Relationships
+Operator --> ClientApp : [HTTPS]\nMonitors line health and acknowledges alerts
+Engineer --> ClientApp : [HTTPS]\nManages topology, threshold rules, and spare parts
+Admin --> ClientApp : [HTTPS]\nManages user accounts and security roles
+
+ClientApp ..> BackEnd : [HTTPS / JSON]\nConsumes REST API (/api/v1/*) with Bearer JWT
+Gateways ..> BackEnd : [HTTPS / JSON]\nPushes real-time sensor readings to /api/v1/sensor-nodes/{id}/telemetry-readings
+Prometheus ..> BackEnd : [HTTPS / Text]\nScrapes /api/v1/metrics (Roadmap Task 5)
+BackEnd ..> Webhooks : [HTTPS POST / JSON]\nDispatches transactional outbox alert webhooks (Roadmap Task 3)
+
+BackEnd --> DB : [TCP / SQL Connection Pool]\nReads and writes via native PostgreSQL pool (pg) with ACID locks & ON DELETE RESTRICT
+
+@enduml

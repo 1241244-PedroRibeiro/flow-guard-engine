@@ -1,0 +1,62 @@
+@startuml
+!pragma layout smetana
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+skinparam nodesep 50
+skinparam ranksep 60
+
+skinparam actor {
+  BackgroundColor #DCE1E3
+  BorderColor #2B2D42
+}
+
+skinparam rectangle {
+  BackgroundColor #F8F9FA
+  BorderColor #2B2D42
+  FontName "Arial"
+}
+
+title System Context Diagram (C4 Level 1) - FlowGuard Telemetry Engine
+
+actor "Plant Operator" as Operator <<Person>> #E2EAFC
+note right of Operator
+  Holds OPERATOR role.
+  Monitors real-time conveyor line health,
+  inspects telemetry summaries, and
+  acknowledges active anomaly alerts.
+end note
+
+actor "Industrial Engineer" as Engineer <<Person>> #E2EAFC
+note top of Engineer
+  Holds ENGINEER role.
+  Configures plant sectors, conveyor lines,
+  sensor nodes, sliding-window thresholds,
+  and manages spare-part stock units.
+end note
+
+actor "System Administrator" as Admin <<Person>> #E2EAFC
+note left of Admin
+  Holds ADMINISTRATOR role.
+  Governs user provisioning, staff
+  onboarding, RBAC assignments, and
+  system security configurations.
+end note
+
+rectangle "FlowGuard Telemetry & Anomaly Detection System" as FlowGuardSystem <<Software System>> #C7D2FE {
+}
+
+rectangle "Industrial IoT Sensor Gateways" as SensorGateways <<External System>> #FFF3BF
+rectangle "External Maintenance & Webhook Receivers" as WebhookReceivers <<External System>> #FFD8A8
+rectangle "Prometheus / OpenMetrics Server" as Prometheus <<External System>> #D8F5A2
+
+' Interactions
+Operator --> FlowGuardSystem : [HTTPS / JSON]\nMonitors line health summaries, views telemetry, and acknowledges alerts
+Engineer --> FlowGuardSystem : [HTTPS / JSON]\nConfigures plant topology, sensor thresholds, and spare-part inventory
+Admin --> FlowGuardSystem : [HTTPS / JSON]\nProvisions users, assigns roles, and manages account statuses
+
+SensorGateways --> FlowGuardSystem : [HTTPS / JSON]\nStreams high-frequency velocity, vibration, temperature, and optical telemetry
+FlowGuardSystem --> WebhookReceivers : [HTTPS POST / JSON]\nDispatches asynchronous anomaly alert payloads (Roadmap Task 3)
+Prometheus --> FlowGuardSystem : [HTTPS GET /metrics]\nScrapes real-time OpenMetrics telemetry counters (Roadmap Task 5)
+
+@enduml
