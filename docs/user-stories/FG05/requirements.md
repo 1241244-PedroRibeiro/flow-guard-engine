@@ -78,3 +78,105 @@ sequenceDiagram
     Repo->>DB: UPDATE anomaly_alerts SET status = 'RESOLVED', resolved_at = $2 WHERE id = $1
     Svc-->>Ctrl: AnomalyAlertResponseDTO
     Ctrl-->>Engineer: 200 OK
+```
+
+
+### 1.7. UCs System Sequence Diagrams
+
+#### 1.7.1. AKNOWLEGED by Operator
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Operator as Plant Operator (OPERATOR)
+    participant API as Public API (Guards)
+    participant Ctrl as AnomalyAlertController
+    participant Svc as AnomalyAlertService
+    participant Domain as AnomalyAlert
+    participant Repo as IAnomalyAlertRepository
+    participant DB as PostgreSQL Database
+
+    rect rgb(230, 245, 230)
+        Note right of Operator: Cenário A: Operador Reconhece Alerta OPEN (200 OK)
+        Operator->>API: POST /api/v1/anomaly-alerts/{id}/acknowledge { diagnosticNote: "Inspecionando vibração no motor" } [Bearer JWT]
+        API->>API: JwtAuthGuard & RolesGuard (Verifica role OPERATOR+)
+        API->>Ctrl: acknowledgeAlert(id, dto, currentUser.id)
+        Ctrl->>Svc: acknowledgeAlert(alertId, userId, dto.diagnosticNote)
+        Svc->>Repo: findById(alertId)
+        DB-->>Repo: AnomalyAlert row (Status: OPEN)
+        Repo-->>Svc: AnomalyAlert Aggregate
+        Svc->>Domain: alert.acknowledge(userId, diagnosticNote)
+        Note over Domain: Transita estado de OPEN para ACKNOWLEDGED, regista userId e timestamp.
+        Svc->>Repo: save(alert)
+        Repo->>DB: UPDATE anomaly_alerts SET status = 'ACKNOWLEDGED', acknowledged_by = $2, acknowledged_at = $3, diagnostic_note = $4 WHERE id = $1
+        DB-->>Repo: OK (1 row updated)
+        Repo-->>Svc: Updated AnomalyAlert
+        Svc-->>Ctrl: AnomalyAlertResponseDTO
+        Ctrl-->>Operator: 200 OK + Updated Alert DTO
+    end
+```
+
+
+#### 1.7.2. RESOLVED by Engineer
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Engineer as Industrial Engineer (ENGINEER)
+    participant API as Public API (Guards)
+    participant Ctrl as AnomalyAlertController
+    participant Svc as AnomalyAlertService
+    participant Domain as AnomalyAlert
+    participant Repo as IAnomalyAlertRepository
+    participant DB as PostgreSQL Database
+
+    rect rgb(230, 240, 255)
+        Note right of Engineer: Cenário B: Engenheiro Resolve Alerta ACKNOWLEDGED (200 OK)
+        Engineer->>API: POST /api/v1/anomaly-alerts/{id}/resolve [Bearer JWT (ENGINEER)]
+        API->>API: JwtAuthGuard & RolesGuard (Verifica role ENGINEER+)
+        API->>Ctrl: resolveAlert(id)
+        Ctrl->>Svc: resolveAlert(alertId)
+        Svc->>Repo: findById(alertId)
+        DB-->>Repo: AnomalyAlert row (Status: ACKNOWLEDGED)
+        Repo-->>Svc: AnomalyAlert Aggregate
+        Svc->>Domain: alert.resolve()
+        Note over Domain: Transita estado de ACKNOWLEDGED para RESOLVED, regista resolvedAt.
+        Svc->>Repo: save(alert)
+        Repo->>DB: UPDATE anomaly_alerts SET status = 'RESOLVED', resolved_at = NOW() WHERE id = $1
+        DB-->>Repo: OK (1 row updated)
+        Repo-->>Svc: Resolved AnomalyAlert
+        Svc-->>Ctrl: AnomalyAlertResponseDTO
+        Ctrl-->>Engineer: 200 OK + Resolved Alert DTO
+    end
+```
+
+
+#### 1.7.3. State Transition Conflict
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Engineer as Industrial Engineer (ENGINEER)
+    participant API as Public API (Guards)
+    participant Ctrl as AnomalyAlertController
+    participant Svc as AnomalyAlertService
+    participant Domain as AnomalyAlert
+    participant Repo as IAnomalyAlertRepository
+    participant DB as PostgreSQL Database
+
+    rect rgb(255, 230, 230)
+        Note right of Engineer: Cenário C: Tentativa de Resolver Alerta OPEN sem Acknowledge Prévio (409 Conflict)
+        Engineer->>API: POST /api/v1/anomaly-alerts/{id}/resolve [Bearer JWT (ENGINEER)]
+        API->>Ctrl: resolveAlert(id)
+        Ctrl->>Svc: resolveAlert(alertId)
+        Svc->>Repo: findById(alertId)
+        DB-->>Repo: AnomalyAlert row (Status: OPEN)
+        Repo-->>Svc: AnomalyAlert Aggregate
+        Svc->>Domain: alert.resolve()
+        Note over Domain: Máquina de estados rejeita: Alerta não está ACKNOWLEDGED.
+        Domain-->>Svc: throws ResourceConflictException("Alert must be ACKNOWLEDGED before resolution")
+        Svc-->>Ctrl: propagates ResourceConflictException
+        Ctrl->>API: Map to 409 Conflict
+        API-->>Engineer: 409 Conflict { error: "Conflict", message: "Alert must be ACKNOWLEDGED before resolution" }
+    end
+```

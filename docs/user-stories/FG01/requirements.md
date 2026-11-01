@@ -105,3 +105,96 @@ sequenceDiagram
 | Target user UUID does not exist | `UserService` throws `EntityNotFoundException('User not found')` | **404** |
 | Email already registered (SQLSTATE `23505` on `uq_users_email_lower`) | `PostgresUserRepository.save()` throws `ResourceConflictException` | **409** |
 
+
+#### 1.7.3. Successful Login (Happy Path)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    %% Configuração de Cores (Estilo Clean Architecture)
+    participant Caller as Staff User (Operator / Engineer)
+    participant API as Public API (NestJS Gateway)
+    participant Ctrl as AuthController
+    participant Svc as AuthService
+    participant Repo as IUserRepository
+    participant Hasher as Argon2Hasher
+    participant Jwt as JwtTokenService
+    participant DB as PostgreSQL Database
+
+    rect rgb(230, 245, 230)
+        Note right of Caller: Cenário A: Autenticação Stateless Bem-Sucedida (200 OK)
+        Caller->>API: POST /api/v1/auth/login { email, password }
+        API->>Ctrl: login(dto)
+        Ctrl->>Svc: login(dto)
+        Svc->>Repo: findByEmail(email.toLowerCase())
+        Repo->>DB: SELECT u.*, array_agg(ur.role) FROM users u ... WHERE LOWER(email) = $1
+        DB-->>Repo: User row + assigned roles
+        Repo-->>Svc: User aggregate (Status: ACTIVE)
+        Svc->>Hasher: verify(user.passwordHash, dto.password)
+        Hasher-->>Svc: true (Match validado)
+        Svc->>Jwt: signToken({ sub: user.id, email: user.email, roles: user.roles })
+        Jwt-->>Svc: Signed JWT (expiresIn: 28800s)
+        Svc-->>Ctrl: LoginResponseDTO { accessToken, tokenType: "Bearer", expiresIn: 28800, user }
+        Ctrl-->>Caller: 200 OK + JWT Bearer Token
+    end
+```
+
+#### 1.7.4. Failed Login (Not-Valid Credentials)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Caller as External Client / Attacker
+    participant API as Public API (NestJS Gateway)
+    participant Ctrl as AuthController
+    participant Svc as AuthService
+    participant Repo as IUserRepository
+    participant Hasher as Argon2Hasher
+    participant DB as PostgreSQL Database
+
+    rect rgb(255, 230, 230)
+        Note right of Caller: Cenário B: Proteção Anti-Enumeração contra Email Inexistente ou Password Errada (401)
+        Caller->>API: POST /api/v1/auth/login { email, password }
+        API->>Ctrl: login(dto)
+        Ctrl->>Svc: login(dto)
+        Svc->>Repo: findByEmail(email.toLowerCase())
+        Repo->>DB: SELECT u.*, array_agg(ur.role) FROM users u ... WHERE LOWER(email) = $1
+        DB-->>Repo: Empty result (Email não registado)
+        Note over Svc,Hasher: Para prevenir enumeração de utilizadores, o serviço executa um hash simulado em tempo constante ou falha diretamente de forma idêntica.
+        Svc-->>Ctrl: throws UnauthorizedDomainException("Invalid email or password")
+        Ctrl-->>API: Map to 401 Unauthorized
+        API-->>Caller: 401 Unauthorized { error: "Unauthorized", message: "Invalid email or password" }
+    end
+```
+
+
+#### 1.7.5 Failed Login (Deactivated Account)
+
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Caller as Unactivated Staff (PENDING_REGISTRATION)
+    participant API as Public API (NestJS Gateway)
+    participant Ctrl as AuthController
+    participant Svc as AuthService
+    participant Repo as IUserRepository
+    participant Hasher as Argon2Hasher
+    participant DB as PostgreSQL Database
+
+    rect rgb(255, 243, 205)
+        Note right of Caller: Cenário C: Tentativa de Login com Conta PENDING_REGISTRATION ou DEACTIVATED (403)
+        Caller->>API: POST /api/v1/auth/login { email, password }
+        API->>Ctrl: login(dto)
+        Ctrl->>Svc: login(dto)
+        Svc->>Repo: findByEmail(email.toLowerCase())
+        DB-->>Repo: User row found
+        Repo-->>Svc: User aggregate (Status: PENDING_REGISTRATION)
+        Svc->>Hasher: verify(user.passwordHash, dto.password)
+        Hasher-->>Svc: true (Password correta)
+        Note over Svc: Validação de estado ativo falha explicitamente.
+        Svc-->>Ctrl: throws ForbiddenDomainException("User account is not active")
+        Ctrl-->>API: Map to 403 Forbidden
+        API-->>Caller: 403 Forbidden { error: "Forbidden", message: "User account is not active" }
+    end
+```

@@ -91,3 +91,106 @@ sequenceDiagram
         Svc-->>Ctrl: void
         Ctrl-->>Engineer: 204 No Content
     end
+
+```
+
+#### 1.7.2. Sector and Line Creation with Success
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Engineer as Industrial Engineer (ENGINEER)
+    participant API as Public API (Guards + Joi Pipe)
+    participant Ctrl as PlantSectorController / ConveyorLineController
+    participant Svc as PlantTopologyService
+    participant Repo as IPlantTopologyRepository
+    participant DB as PostgreSQL Database
+
+    rect rgb(230, 245, 230)
+        Note right of Engineer: Cenário A: Criação de Sector e Conveyor Line (201 Created)
+        Engineer->>API: POST /api/v1/plant-sectors { sectorCode: "SEC-LOG-A", name: "Sorting Bay" } [Bearer JWT]
+        API->>API: JwtAuthGuard & RolesGuard (Verifica role ENGINEER)
+        API->>Ctrl: createSector(dto)
+        Ctrl->>Svc: createPlantSector(dto)
+        Svc->>Repo: saveSector(sector)
+        Repo->>DB: INSERT INTO plant_sectors (sector_code, name) VALUES ($1, $2)
+        DB-->>Repo: OK (Inserted row)
+        Repo-->>Svc: PlantSector Aggregate
+        Svc-->>Ctrl: PlantSectorResponseDTO
+        Ctrl-->>Engineer: 201 Created + Location Header
+
+        Engineer->>API: POST /api/v1/conveyor-lines { sectorId, lineCode: "LINE-01", name: "Belt 1" }
+        API->>Ctrl: createConveyorLine(dto)
+        Ctrl->>Svc: createConveyorLine(dto)
+        Svc->>Repo: findSectorById(sectorId)
+        DB-->>Repo: Sector exists
+        Svc->>Repo: saveLine(line)
+        Repo->>DB: INSERT INTO conveyor_lines (sector_id, line_code, name) VALUES ($1, $2, $3)
+        DB-->>Repo: OK
+        Repo-->>Svc: ConveyorLine Aggregate
+        Svc-->>Ctrl: ConveyorLineHealthSummaryResponseDTO
+        Ctrl-->>Engineer: 201 Created
+    end
+```
+
+
+#### 1.7.3. Restrite Deletion
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Engineer as Industrial Engineer (ENGINEER)
+    participant API as Public API (Guards)
+    participant Ctrl as PlantSectorController
+    participant Svc as PlantTopologyService
+    participant Repo as IPlantTopologyRepository
+    participant DB as PostgreSQL Database
+
+    rect rgb(255, 230, 230)
+        Note right of Engineer: Cenário B: Tentativa de Eliminação de Sector com Linhas Dependentes (409 Conflict)
+        Engineer->>API: DELETE /api/v1/plant-sectors/{id} [Bearer JWT]
+        API->>Ctrl: deleteSector(id)
+        Ctrl->>Svc: deletePlantSector(id)
+        Svc->>Repo: findSectorById(id)
+        DB-->>Repo: Sector found
+        Svc->>Repo: deleteSector(id)
+        Repo->>DB: DELETE FROM plant_sectors WHERE id = $1
+        Note over DB: Constraint FK `fk_conveyor_lines_sector` com `ON DELETE RESTRICT` rejeita a remoção.
+        DB-->>Repo: PostgreSQL Error 23503 (Foreign Key Violation)
+        Repo-->>Svc: throws ResourceConflictException("Cannot delete PlantSector: referenced by conveyor lines")
+        Svc-->>Ctrl: propagates ResourceConflictException
+        Ctrl-->>API: Map to 409 Conflict
+        API-->>Engineer: 409 Conflict { error: "Conflict", message: "Cannot delete PlantSector SEC-LOG-A: referenced by conveyor lines." }
+    end
+```
+
+#### 1.7.4. Operational Status Transition
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Operator as Plant Operator / Engineer
+    participant API as Public API (Guards)
+    participant Ctrl as ConveyorLineController
+    participant Svc as PlantTopologyService
+    participant Repo as IPlantTopologyRepository
+    participant DB as PostgreSQL Database
+
+    rect rgb(230, 240, 255)
+        Note right of Operator: Cenário C: Transição de Estado Operacional (PATCH /operational-status)
+        Operator->>API: PATCH /api/v1/conveyor-lines/{id}/operational-status { operationalStatus: "MAINTENANCE", reason: "Scheduled check" } [Bearer JWT]
+        API->>Ctrl: updateOperationalStatus(id, dto)
+        Ctrl->>Svc: updateLineStatus(id, dto)
+        Svc->>Repo: findLineById(id)
+        DB-->>Repo: ConveyorLine row (Status: RUNNING)
+        DB-->>Repo: ConveyorLine domain aggregate reconstituted
+        Repo-->>Svc: ConveyorLine Aggregate
+        Svc->>Svc: line.updateStatus(LineStatus.MAINTENANCE)
+        Svc->>Repo: saveLine(line)
+        Repo->>DB: UPDATE conveyor_lines SET operational_status = 'MAINTENANCE', updated_at = NOW() WHERE id = $1
+        DB-->>Repo: OK (1 row updated)
+        Repo-->>Svc: Updated ConveyorLine
+        Svc-->>Ctrl: ConveyorLineHealthSummaryResponseDTO
+        Ctrl-->>Operator: 200 OK + Updated Summary DTO
+    end
+```

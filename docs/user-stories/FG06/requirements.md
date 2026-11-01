@@ -67,3 +67,97 @@ sequenceDiagram
     Repo-->>Svc: Updated SparePartStock
     Svc-->>Ctrl: SparePartStockResponseDTO
     Ctrl-->>Operator: 200 OK
+```
+
+### 1.7. UCs System Sequence Diagrams
+
+#### 1.7.1. Part Registration (and old qty substitution)
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Engineer as Industrial Engineer (ENGINEER)
+    participant API as Public API (Guards + Joi Pipe)
+    participant Ctrl as SparePartStockController
+    participant Svc as SparePartsStockService
+    participant Repo as ISparePartStockRepository
+    participant DB as PostgreSQL Database
+
+    rect rgb(230, 245, 230)
+        Note right of Engineer: Cenário A: Registo de Spare-Part com Stock Inicial (201 Created)
+        Engineer->>API: POST /api/v1/spare-parts { partCode: "PRT-BRG-6204", name: "Roller Bearing SKF-6204", initialStockUnits: 20 } [Bearer JWT]
+        API->>API: JwtAuthGuard & RolesGuard (Verifica role ENGINEER+)
+        API->>Ctrl: createSparePart(dto)
+        Ctrl->>Svc: registerSparePart(dto)
+        Svc->>Repo: save(sparePart)
+        Repo->>DB: INSERT INTO spare_part_stock (part_code, name, stock_units) VALUES ($1, $2, $3)
+        DB-->>Repo: OK (Inserted row)
+        Repo-->>Svc: SparePartStock Aggregate
+        Svc-->>Ctrl: SparePartStockResponseDTO
+        Ctrl-->>Engineer: 201 Created + Stock Item DTO
+    end
+```
+
+
+#### 1.7.2. Stock Atomical Consumption
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Operator as Plant Operator / Engineer
+    participant API as Public API (Guards)
+    participant Ctrl as SparePartStockController
+    participant Svc as SparePartsStockService
+    participant Repo as ISparePartStockRepository
+    participant DB as PostgreSQL Database (ACID Tx)
+
+    rect rgb(230, 240, 255)
+        Note right of Operator: Cenário B: Dedução Segura de Stock com SELECT ... FOR UPDATE (200 OK)
+        Operator->>API: POST /api/v1/spare-parts/{id}/consume { units: 2, reason: "Manutenção Corretiva Line 01" } [Bearer JWT]
+        API->>Ctrl: consumeStock(id, dto, currentUser.id)
+        Ctrl->>Svc: consumeStock(partId, dto, userId)
+        Svc->>Repo: adjustStockWithLock(partId, "CONSUMPTION", 2, reason, userId)
+        Repo->>DB: BEGIN TRANSACTION
+        Repo->>DB: SELECT * FROM spare_part_stock WHERE id = $1 FOR UPDATE
+        DB-->>Repo: Row locked (stockUnits: 18 >= 2)
+        Repo->>Repo: sparePart.consume(AbstractStockQuantity.create(2)) [18 - 2 = 16: Válido]
+        Repo->>DB: UPDATE spare_part_stock SET stock_units = 16, updated_at = NOW() WHERE id = $1
+        Repo->>DB: INSERT INTO spare_part_movements (part_id, movement_type, amount, reason, performed_by) VALUES (...)
+        Repo->>DB: COMMIT TRANSACTION
+        DB-->>Repo: Commit successful
+        Repo-->>Svc: Updated SparePartStock Aggregate
+        Svc-->>Ctrl: SparePartStockResponseDTO (stockUnits: 16)
+        Ctrl-->>Operator: 200 OK + Updated Stock DTO
+    end
+```
+
+
+#### 1.7.3. Rejection by Balance < 0 
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Operator as Plant Operator / Engineer
+    participant API as Public API (Guards)
+    participant Ctrl as SparePartStockController
+    participant Svc as SparePartsStockService
+    participant Domain as SparePartStock / AbstractStockQuantity
+    participant Repo as ISparePartStockRepository
+    participant DB as PostgreSQL Database (ACID Tx)
+
+    rect rgb(255, 230, 230)
+        Note right of Operator: Cenário C: Tentativa de Consumir mais do que o Stock Disponível (422)
+        Operator->>API: POST /api/v1/spare-parts/{id}/consume { units: 50, reason: "Grande intervenção" } [Bearer JWT]
+        API->>Ctrl: consumeStock(id, dto, currentUser.id)
+        Ctrl->>Svc: consumeStock(partId, dto, userId)
+        Svc->>Repo: adjustStockWithLock(partId, "CONSUMPTION", 50, reason, userId)
+        Repo->>DB: BEGIN TRANSACTION
+        Repo->>DB: SELECT * FROM spare_part_stock WHERE id = $1 FOR UPDATE
+        DB-->>Repo: Row locked (stockUnits: 5 < 50)
+        Repo->>Domain: sparePart.consume(AbstractStockQuantity.create(50))
+        Note over Domain: Invariante violado: stockUnits (5) < requestedUnits (50).
+        Domain-->>Repo: throws DomainInvariantException("Insufficient spare-part stock units available")
+        Repo->>DB: ROLLBACK TRANSACTION (Anula bloqueio)
+        DB-->>Repo: Rollback executed
+        Repo-->>Svc: propagates DomainInvariantException
+        Ctrl->>API: Map to 422 Unprocessable Entity
+        API-->>Operator: 422 Unprocessable Entity { error: "Unprocessable Entity", message: "Insufficient spare-part stock units available" }
+    end
+```

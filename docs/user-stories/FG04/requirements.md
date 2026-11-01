@@ -82,3 +82,107 @@ sequenceDiagram
     Svc->>DB: COMMIT
     Svc-->>Ctrl: TelemetryIngestionEvaluationResponseDTO
     Ctrl-->>Gateway: 201 Created
+```
+
+
+#### 1.7.2. Normal Telemtry Ingestion
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Gateway as IoT Sensor Gateway / Engineer
+    participant API as Public API (Guards + Joi Pipe)
+    participant Ctrl as TelemetryIngestionController
+    participant Svc as TelemetryIngestionService
+    participant Engine as TelemetryEvaluationEngine (Ring Buffer)
+    participant Repo as ISensorTelemetryRepository
+    participant DB as PostgreSQL Database (ACID Tx)
+
+    rect rgb(230, 245, 230)
+        Note right of Gateway: Cenário A: Ingestão de Telemetria Normal / Sem Breach (201 Created)
+        Gateway->>API: POST /api/v1/sensor-nodes/{id}/telemetry-readings { rawValue: 3.2, unit: "mm/s" } [Bearer JWT]
+        API->>API: Joi Boundary Validation Pipe (Sanitiza tipo e limites físicos)
+        API->>Ctrl: ingestReading(id, dto)
+        Ctrl->>Svc: ingestReading(sensorId, dto)
+        Svc->>Repo: findSensorWithRuleAndLine(sensorId)
+        DB-->>Repo: SensorNode + ThresholdRule + ConveyorLine (Todos ACTIVE)
+        Repo-->>Svc: Loaded domain aggregates
+        Svc->>Engine: evaluate(sensor, thresholdRule, rawValue)
+        Note over Engine: Filtro 2: Adiciona ao Ring Buffer (N<=128), calcula Moving Average (μ_W = 3.4).
+        Note over Engine: Filtro 3: Compara μ_W (3.4) com warningLimit (4.5). Sem breach.
+        Engine-->>Svc: WindowEvaluation { movingAverage: 3.4, movingMedian: 3.3, breachDetected: false }
+        Svc->>DB: BEGIN TRANSACTION
+        Svc->>Repo: insertReading(reading)
+        DB-->>Repo: INSERT 1 OK
+        Svc->>DB: COMMIT
+        Svc-->>Ctrl: TelemetryIngestionEvaluationResponseDTO { reading, evaluation: { breachDetected: false } }
+        Ctrl-->>Gateway: 201 Created
+    end
+```
+
+
+#### 1.7.3. Critical Break Ingestion
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Gateway as IoT Sensor Gateway / Engineer
+    participant API as Public API (Guards + Joi Pipe)
+    participant Ctrl as TelemetryIngestionController
+    participant Svc as TelemetryIngestionService
+    participant Engine as TelemetryEvaluationEngine (Ring Buffer)
+    participant LineService as LineStateTransitionDomainService
+    participant Repo as ISensorTelemetryRepository
+    participant DB as PostgreSQL Database (ACID Tx)
+
+    rect rgb(255, 230, 230)
+        Note right of Gateway: Cenário B: Ingestão com Breach Crítico $\rightarrow$ AnomalyAlert + FAULT_HALTED (201 Created)
+        Gateway->>API: POST /api/v1/sensor-nodes/{id}/telemetry-readings { rawValue: 8.9, unit: "mm/s" } [Bearer JWT]
+        API->>Ctrl: ingestReading(id, dto)
+        Ctrl->>Svc: ingestReading(sensorId, dto)
+        Svc->>Repo: findSensorWithRuleAndLine(sensorId)
+        DB-->>Repo: SensorNode + ThresholdRule (criticalLimit: 7.1) + ConveyorLine (RUNNING)
+        Repo-->>Svc: Loaded domain aggregates
+        Svc->>Engine: evaluate(sensor, thresholdRule, rawValue)
+        Note over Engine: Filtro 3: Moving Average (μ_W = 7.5) >= criticalLimit (7.1). Breach CRITICAL detetado!
+        Engine-->>Svc: WindowEvaluation { movingAverage: 7.5, breachDetected: true, severity: "CRITICAL" }
+        Svc->>LineService: transitionLineAndCreateAlert(line, sensor, severity)
+        LineService->>LineService: Transita ConveyorLine para FAULT_HALTED e instancia AnomalyAlert (OPEN)
+        Svc->>DB: BEGIN TRANSACTION (ACID Boundary)
+        Svc->>Repo: insertReading(reading)
+        Svc->>Repo: createAnomalyAlert(alert)
+        Svc->>Repo: updateConveyorLineStatus(line.id, "FAULT_HALTED")
+        DB-->>Repo: All inserts/updates committed successfully
+        Svc->>DB: COMMIT
+        Svc-->>Ctrl: TelemetryIngestionEvaluationResponseDTO { reading, evaluation: { breachDetected: true, severity: "CRITICAL", newLineStatus: "FAULT_HALTED", triggeredAlertId } }
+        Ctrl-->>Gateway: 201 Created
+    end
+```
+
+
+#### 1.7.4. Sensor Rejection (Inactive Line / Wrong Physical Value)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Gateway as IoT Sensor Gateway / Engineer
+    participant API as Public API (Guards + Joi Pipe)
+    participant Ctrl as TelemetryIngestionController
+    participant Svc as TelemetryIngestionService
+    participant Repo as ISensorTelemetryRepository
+    participant DB as PostgreSQL Database
+
+    rect rgb(255, 243, 205)
+        Note right of Gateway: Cenário C: Rejeição de Telemetria para Ativo Inativo ou Valor Físico Inválido (422)
+        Gateway->>API: POST /api/v1/sensor-nodes/{id}/telemetry-readings { rawValue: -5.2, unit: "mm/s" } [Bearer JWT]
+        API->>API: Joi Boundary Validation Pipe (Deteta valor negativo em sensor de vibração)
+        API->>Ctrl: ingestReading(id, dto)
+        Ctrl->>Svc: ingestReading(sensorId, dto)
+        Svc->>Repo: findSensorWithRuleAndLine(sensorId)
+        DB-->>Repo: SensorNode ou ConveyorLine encontrado com isActive = false (DEACTIVATED)
+        Note over Svc: Filtro 1 (Guard): Rejeita leitura por ativo inativo ou valor físico fora de escala.
+        Svc-->>Ctrl: throws DomainInvariantException("Cannot ingest telemetry for deactivated sensor or invalid physical range")
+        Ctrl->>API: Map to 422 Unprocessable Entity
+        API-->>Gateway: 422 Unprocessable Entity { error: "Unprocessable Entity", message: "Cannot ingest telemetry for deactivated sensor or invalid physical range" }
+    end
+```

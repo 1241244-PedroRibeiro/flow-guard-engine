@@ -80,3 +80,102 @@ sequenceDiagram
     Repo-->>Svc: ThresholdRule
     Svc-->>Ctrl: ThresholdRuleResponseDTO
     Ctrl-->>Engineer: 200 OK
+```
+
+
+#### 1.7.2. Sensor Registration and Limiar Configuration Successful
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Engineer as Industrial Engineer (ENGINEER)
+    participant API as Public API (Guards + Joi Pipe)
+    participant Ctrl as SensorNodeController
+    participant Svc as SensorManagementService
+    participant Repo as ISensorTelemetryRepository
+    participant DB as PostgreSQL Database
+
+    rect rgb(230, 245, 230)
+        Note right of Engineer: Cenário A: Registo de Sensor e Regra de Limiar (201 Created / 200 OK)
+        Engineer->>API: POST /api/v1/sensor-nodes { lineId, serialNumber: "SN-VIB-9001", sensorType: "MOTOR_VIBRATION" } [Bearer JWT]
+        API->>API: JwtAuthGuard & RolesGuard (Verifica role ENGINEER)
+        API->>Ctrl: createSensorNode(dto)
+        Ctrl->>Svc: registerSensor(dto)
+        Svc->>Repo: findLineById(lineId)
+        DB-->>Repo: ConveyorLine exists
+        Svc->>Repo: saveSensor(sensor)
+        Repo->>DB: INSERT INTO sensor_nodes (line_id, serial_number, sensor_type) VALUES ($1, $2, $3)
+        DB-->>Repo: OK
+        Repo-->>Svc: SensorNode Aggregate
+        Svc-->>Ctrl: SensorNodeResponseDTO
+        Ctrl-->>Engineer: 201 Created
+
+        Engineer->>API: PUT /api/v1/sensor-nodes/{id}/threshold-rule { warningLimit: 4.5, criticalLimit: 7.1, unit: "mm/s" }
+        API->>Ctrl: upsertThresholdRule(id, dto)
+        Ctrl->>Svc: configureThreshold(sensorId, dto)
+        Svc->>Svc: ThresholdRule.create({ warningLimit: 4.5, criticalLimit: 7.1 }) [7.1 > 4.5: Válido]
+        Svc->>Repo: saveThresholdRule(rule)
+        Repo->>DB: INSERT INTO threshold_rules ... ON CONFLICT (sensor_id) DO UPDATE ...
+        DB-->>Repo: OK
+        Repo-->>Svc: ThresholdRule Entity
+        Svc-->>Ctrl: ThresholdRuleResponseDTO
+        Ctrl-->>Engineer: 200 OK
+    end
+```
+
+#### 1.7.3. criticalLimit > warningLimit violation
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Engineer as Industrial Engineer (ENGINEER)
+    participant API as Public API (Guards)
+    participant Ctrl as SensorNodeController
+    participant Svc as SensorManagementService
+    participant Domain as ThresholdRule Value Object
+    participant DB as PostgreSQL Database
+
+    rect rgb(255, 230, 230)
+        Note right of Engineer: Cenário B: Tentativa de Configurar Limiar Inválido (422 Unprocessable Entity)
+        Engineer->>API: PUT /api/v1/sensor-nodes/{id}/threshold-rule { warningLimit: 8.0, criticalLimit: 6.0, unit: "mm/s" } [Bearer JWT]
+        API->>Ctrl: upsertThresholdRule(id, dto)
+        Ctrl->>Svc: configureThreshold(sensorId, dto)
+        Svc->>Repo: findSensorById(sensorId)
+        DB-->>Repo: Sensor found
+        Svc->>Domain: ThresholdRule.create({ warningLimit: 8.0, criticalLimit: 6.0 })
+        Note over Domain: Invariante violado: criticalLimit (6.0) não é estritamente superior a warningLimit (8.0).
+        Domain-->>Svc: throws DomainInvariantException("criticalLimit must be strictly greater than warningLimit")
+        Svc-->>Ctrl: propagates DomainInvariantException
+        Ctrl->>API: Map to 422 Unprocessable Entity
+        API-->>Engineer: 422 Unprocessable Entity { error: "Unprocessable Entity", message: "criticalLimit must be strictly greater than warningLimit" }
+    end
+```
+
+#### 1.7.4. Soft Deactivation
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Engineer as Industrial Engineer (ENGINEER)
+    participant API as Public API (Guards)
+    participant Ctrl as SensorNodeController
+    participant Svc as SensorManagementService
+    participant Repo as ISensorTelemetryRepository
+    participant DB as PostgreSQL Database
+
+    rect rgb(230, 240, 255)
+        Note right of Engineer: Cenário C: Soft Deactivation de Sensor Node para Manutenção (200 OK)
+        Engineer->>API: PATCH /api/v1/sensor-nodes/{id}/deactivate [Bearer JWT]
+        API->>Ctrl: deactivateSensor(id)
+        Ctrl->>Svc: deactivateSensorNode(id)
+        Svc->>Repo: findSensorById(id)
+        DB-->>Repo: Sensor row found (isActive: true)
+        Repo-->>Svc: SensorNode Aggregate
+        Svc->>Svc: sensor.deactivate() (isActive = false)
+        Svc->>Repo: saveSensor(sensor)
+        Repo->>DB: UPDATE sensor_nodes SET is_active = FALSE, updated_at = NOW() WHERE id = $1
+        DB-->>Repo: OK (1 row updated)
+        Repo-->>Svc: Updated SensorNode
+        Svc-->>Ctrl: SensorNodeResponseDTO (isActive: false)
+        Ctrl-->>Engineer: 200 OK + Updated Sensor DTO
+    end
+```
