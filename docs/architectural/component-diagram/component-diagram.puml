@@ -1,0 +1,175 @@
+@startuml
+!pragma layout smetana
+skinparam packageStyle rectangle
+skinparam componentStyle uml2
+skinparam shadowing false
+skinparam linetype ortho
+skinparam nodesep 45
+skinparam ranksep 55
+
+skinparam component {
+  BackgroundColor #F8F9FA
+  BorderColor #2B2D42
+  ArrowColor #1D3557
+  FontName "Arial"
+  FontSize 12
+}
+
+skinparam interface {
+  BackgroundColor #FFFFFF
+  BorderColor #1D3557
+}
+
+title FlowGuard Back-End - Component Diagram (C4 Level 3 / Clean Architecture Container)
+
+' =========================================================
+' EXTERNAL CLIENTS & INTEGRATORS (OpenAPI REST Interfaces)
+' =========================================================
+cloud "External Clients & Industrial Integrators" {
+  [Operations & Engineering Client (SPA / Bruno)] as SPA #E2EAFC
+  [Industrial IoT Sensor Gateways] as SensorGateways #FFF3BF
+  [Prometheus Metrics Scraper (Task 5)] as Prometheus #D8F5A2
+  [External Maintenance Webhook Receiver (Task 3)] as WebhookReceiver #FFD8A8
+}
+
+package "FlowGuard Back-End Modular Monolith Container (Node.js / NestJS / TypeScript)" {
+
+  ' =========================================================
+  ' 1. PRESENTATION & DELIVERY LAYER (Driving Adapters)
+  ' =========================================================
+  package "1. Presentation & Delivery Layer (HTTP Controllers, Guards & Validation Pipes)" {
+    [Auth & User Controller\n(JwtAuthGuard, RolesGuard)] as C_Auth
+    [Plant Topology Controller\n(Sectors & Conveyor Lines)] as C_Topology
+    [Sensor & Threshold Controller\n(Calibration & Bounds)] as C_Sensor
+    [Telemetry Ingestion Controller\n(High-Frequency Stream Boundary)] as C_Telemetry
+    [Anomaly Alert Controller\n(Acknowledge & Resolve)] as C_Alert
+    [Spare Parts Stock Controller\n(Abstract Integer Inventory)] as C_Stock
+    [Health & Metrics Controller\n(Health + OpenMetrics Task 5)] as C_Metrics
+  }
+
+  ' REST Endpoints Exposed
+  () "/api/v1/auth & /users" as API_Auth
+  () "/api/v1/plant-sectors & /conveyor-lines" as API_Topology
+  () "/api/v1/sensor-nodes & /threshold-rules" as API_Sensor
+  () "/api/v1/sensor-nodes/:id/telemetry-readings" as API_Telemetry
+  () "/api/v1/anomaly-alerts" as API_Alert
+  () "/api/v1/spare-parts" as API_Stock
+  () "/api/v1/health & /metrics" as API_Metrics
+
+  API_Auth -down- C_Auth
+  API_Topology -down- C_Topology
+  API_Sensor -down- C_Sensor
+  API_Telemetry -down- C_Telemetry
+  API_Alert -down- C_Alert
+  API_Stock -down- C_Stock
+  API_Metrics -down- C_Metrics
+
+  SPA ..> API_Auth : HTTPS / JSON
+  SPA ..> API_Topology : HTTPS / JSON
+  SPA ..> API_Sensor : HTTPS / JSON
+  SPA ..> API_Alert : HTTPS / JSON
+  SPA ..> API_Stock : HTTPS / JSON
+  SensorGateways ..> API_Telemetry : HTTPS / JSON
+  Prometheus ..> API_Metrics : HTTPS / GET
+
+  ' =========================================================
+  ' 2. APPLICATION SERVICES LAYER (Use Cases & Orchestration)
+  ' =========================================================
+  package "2. Application Services Layer (Transactional Use Cases)" {
+    [AuthAndUserService\n(Argon2id, JWT & RBAC Onboarding)] as S_Auth
+    [PlantTopologyService\n(Sector/Line Lifecycle & Optimistic Lock Task 2)] as S_Topology
+    [SensorManagementService\n(Sensor Registration & Threshold Rules)] as S_Sensor
+    [TelemetryIngestionService\n(Orchestrates Window Eval & Alert Creation)] as S_Telemetry
+    [AnomalyAlertService\n(Alert Lifecycle & Outbox Webhook Task 3)] as S_Alert
+    [SparePartsStockService\n(Row-Locked Stock Adjustments Task 2)] as S_Stock
+    [LineHealthQueryService\n(CQRS Read Projections & Metrics Task 5)] as S_Query
+  }
+
+  C_Auth ..> S_Auth : executes
+  C_Topology ..> S_Topology : executes
+  C_Topology ..> S_Query : queries summary
+  C_Sensor ..> S_Sensor : executes
+  C_Telemetry ..> S_Telemetry : executes
+  C_Alert ..> S_Alert : executes
+  C_Stock ..> S_Stock : executes
+  C_Metrics ..> S_Query : scrapes metrics
+
+  ' =========================================================
+  ' 3. DOMAIN CORE LAYER (Entities, VOs & Domain Services)
+  ' =========================================================
+  package "3. Domain Core Layer (Pure TypeScript Invariants & Sliding-Window Math)" {
+    [Identity Aggregate\n(User, UserRole, PasswordHash)] as D_User
+    [Plant Topology Aggregates\n(PlantSector, ConveyorLine, LineStatus)] as D_Topology
+    [Sensor & Telemetry Aggregates\n(SensorNode, ThresholdRule, TelemetryReading)] as D_Sensor
+    [Anomaly Alert Aggregate\n(AnomalyAlert, AlertSeverity, AlertStatus)] as D_Alert
+    [Spare Parts Aggregate\n(SparePartStock, AbstractStockQuantity)] as D_Stock
+
+    [TelemetryEvaluationEngine\n(Pipes & Filters: Ring Buffer, Moving Avg,\nMoving Median Task 1, Z-Score)] as DS_TelemetryEngine
+    [LineStateTransitionDomainService\n(Coordinates Line Fault Halts & Warnings)] as DS_LineState
+  }
+
+  S_Auth ..> D_User : operates
+  S_Topology ..> D_Topology : operates
+  S_Sensor ..> D_Sensor : operates
+  S_Telemetry ..> D_Sensor : operates
+  S_Telemetry ..> DS_TelemetryEngine : evaluates window
+  S_Telemetry ..> DS_LineState : transitions line
+  S_Alert ..> D_Alert : operates
+  S_Stock ..> D_Stock : operates
+
+  DS_TelemetryEngine ..> D_Sensor : inspects bounds
+  DS_LineState ..> D_Topology : mutates state
+  DS_LineState ..> D_Alert : instantiates alert
+
+  ' =========================================================
+  ' 4. INFRASTRUCTURE & PERSISTENCE LAYER (Driven Adapters)
+  ' =========================================================
+  package "4. Infrastructure & Persistence Layer (Ports & Secondary Adapters)" {
+    interface "IUserRepository" as IR_User
+    interface "IPlantTopologyRepository" as IR_Topology
+    interface "ISensorTelemetryRepository" as IR_Sensor
+    interface "IAnomalyAlertRepository" as IR_Alert
+    interface "ISparePartStockRepository" as IR_Stock
+    interface "IAlertWebhookDispatcher" as IP_Webhook
+
+    [PgUserRepository\n(pg Pool / UserMapper)] as R_User
+    [PgPlantTopologyRepository\n(pg Pool / Optimistic Version Lock)] as R_Topology
+    [PgSensorTelemetryRepository\n(pg Pool / Batch & Enriched Insert)] as R_Sensor
+    [PgAnomalyAlertRepository\n(pg Pool / Transactional Outbox)] as R_Alert
+    [PgSparePartStockRepository\n(pg Pool / SELECT FOR UPDATE)] as R_Stock
+    [HttpWebhookDispatcherAdapter\n(Async Outbox Worker - Task 3)] as A_Webhook
+  }
+
+  S_Auth ..> IR_User : uses
+  S_Topology ..> IR_Topology : uses
+  S_Sensor ..> IR_Sensor : uses
+  S_Telemetry ..> IR_Sensor : uses
+  S_Telemetry ..> IR_Topology : uses
+  S_Telemetry ..> IR_Alert : uses
+  S_Alert ..> IR_Alert : uses
+  S_Alert ..> IP_Webhook : dispatches
+  S_Stock ..> IR_Stock : uses
+  S_Query ..> IR_Topology : queries view
+  S_Query ..> IR_Alert : queries counts
+
+  R_User -up-|> IR_User
+  R_Topology -up-|> IR_Topology
+  R_Sensor -up-|> IR_Sensor
+  R_Alert -up-|> IR_Alert
+  R_Stock -up-|> IR_Stock
+  A_Webhook -up-|> IP_Webhook
+}
+
+' =========================================================
+' DATABASE STORE & EXTERNAL WEBHOOK TARGETS
+' =========================================================
+database "PostgreSQL 16+ Relational Database\n(3NF Schema, ON DELETE RESTRICT, CHECK stock >= 0,\nSELECT FOR UPDATE, v_conveyor_line_health_summary)" as PostgreSQL #D8F3DC
+
+R_User ..> PostgreSQL : SQL / pg Pool
+R_Topology ..> PostgreSQL : SQL / pg Pool
+R_Sensor ..> PostgreSQL : SQL / pg Pool
+R_Alert ..> PostgreSQL : SQL / pg Pool
+R_Stock ..> PostgreSQL : SQL / pg Pool
+A_Webhook ..> WebhookReceiver : HTTPS POST (JSON)
+
+@enduml

@@ -1,0 +1,270 @@
+@startuml flowguard-domain-model
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam roundCorner 8
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 13
+skinparam nodesep 40
+skinparam ranksep 70
+skinparam packageStyle rectangle
+skinparam ArrowColor #555555
+skinparam ArrowFontSize 11
+skinparam ArrowFontColor #444444
+skinparam titleFontSize 22
+skinparam legendBackgroundColor #FAFAFA
+skinparam legendBorderColor #CCCCCC
+
+skinparam package {
+  FontStyle bold
+  FontSize 15
+  BorderColor #AAAAAA
+}
+skinparam class {
+  BackgroundColor<<Root>> #FFE9A8
+  BorderColor<<Root>> #C99700
+  BorderThickness<<Root>> 2
+  BackgroundColor<<Entity>> #D6E8FF
+  BorderColor<<Entity>> #3B78C4
+  BackgroundColor<<VO>> #DDF3DD
+  BorderColor<<VO>> #3C9A3C
+  BackgroundColor<<Enum>> #F0E0F7
+  BorderColor<<Enum>> #8E44AD
+}
+
+hide empty methods
+hide empty fields
+hide circle
+hide stereotype
+
+title FlowGuard - Industrial Telemetry & Anomaly Detection Domain Model
+
+package "IDENTITY & ACCESS" #EAF2FB {
+  class User <<Root>> {
+    id : UserId «id»
+    email : Email
+    name : PersonName
+    passwordHash : PasswordHash
+    status : UserStatus
+    roles : Set<UserRole>
+    createdAt : Timestamp
+    --
+    changePassword(PasswordHash)
+    activate() / deactivate()
+    assignRole(UserRole)
+    hasRole(UserRole) : boolean
+  }
+  enum UserRole <<Enum>> {
+    OPERATOR
+    ENGINEER
+    ADMINISTRATOR
+  }
+  enum UserStatus <<Enum>> {
+    ACTIVE
+    DEACTIVATED
+    PENDING_REGISTRATION
+  }
+}
+
+package "PLANT TOPOLOGY" #EEF0F2 {
+  class PlantSector <<Root>> {
+    id : SectorId «id»
+    sectorCode : SectorCode
+    name : Designation
+    description : String
+    isActive : boolean
+    --
+    updateDetails(Designation, String)
+    activate() / deactivate()
+  }
+  class ConveyorLine <<Root>> {
+    id : LineId «id»
+    sectorId : SectorId
+    lineCode : LineCode
+    name : Designation
+    operationalStatus : LineStatus
+    isActive : boolean
+    --
+    updateStatus(LineStatus)
+    activate() / deactivate()
+  }
+  enum LineStatus <<Enum>> {
+    RUNNING
+    DEGRADED_WARNING
+    FAULT_HALTED
+    MAINTENANCE
+    DEACTIVATED
+  }
+}
+
+package "SENSOR & TELEMETRY" #FFF6E0 {
+  class SensorNode <<Root>> {
+    id : SensorId «id»
+    lineId : LineId
+    serialNumber : SensorSerialNumber
+    sensorType : SensorType
+    isActive : boolean
+    --
+    calibrate()
+    activate() / deactivate()
+  }
+  class ThresholdRule <<Entity>> {
+    id : ThresholdId «id»
+    sensorId : SensorId
+    warningLimit : TelemetryValue
+    criticalLimit : TelemetryValue
+    --
+    updateLimits(TelemetryValue, TelemetryValue)
+  }
+  class TelemetryReading <<Entity>> {
+    id : ReadingId «id»
+    sensorId : SensorId
+    rawvalue : TelemetryValue
+    movingAverage : TelemetryValue
+    movingMedian : TelemetryValue
+    recordedAt : Timestamp
+  }
+  enum SensorType <<Enum>> {
+    BELT_VELOCITY
+    MOTOR_VIBRATION
+    BEARING_TEMPERATURE
+    OPTICAL_COUNTER
+  }
+}
+
+package "ANOMALY & ALERTING" #FDECEC {
+  class AnomalyAlert <<Root>> {
+    id : AlertId «id»
+    sensorId : SensorId
+    lineId : LineId
+    severity : AlertSeverity
+    status : AlertStatus
+    message : String
+    triggeredAt : Timestamp
+    acknowledgedAt : Timestamp [0..1]
+    acknowledgedBy : UserId [0..1]
+    --
+    acknowledge(UserId, String)
+    resolve()
+  }
+  enum AlertSeverity <<Enum>> {
+    WARNING
+    CRITICAL
+  }
+  enum AlertStatus <<Enum>> {
+    OPEN
+    ACKNOWLEDGED
+    RESOLVED
+  }
+}
+
+package "SPARE PARTS INVENTORY" #F6ECFA {
+  class SparePartStock <<Root>> {
+    id : PartId «id»
+    partCode : PartCode
+    name : Designation
+    stockUnits : AbstractStockQuantity
+    updatedAt : Timestamp
+    --
+    replenish(AbstractStockQuantity)
+    consume(AbstractStockQuantity)
+    adjust(AbstractStockQuantity)
+    hasSufficientStock(AbstractStockQuantity) : boolean
+  }
+}
+
+package "SHARED KERNEL" #F2F2F2 {
+  class PersonName <<VO>> {
+    firstName : String
+    lastName : String
+    fullName() : String
+  }
+  class Email <<VO>> {
+    address : String
+  }
+  class PasswordHash <<VO>> {
+    hashedValue : String
+  }
+  class SectorCode <<VO>> {
+    value : String
+  }
+  class LineCode <<VO>> {
+    value : String
+  }
+  class Designation <<VO>> {
+    value : String
+  }
+  class SensorSerialNumber <<VO>> {
+    value : String
+  }
+  class TelemetryValue <<VO>> {
+    numericValue : double
+    unit : String
+  }
+  class AbstractStockQuantity <<VO>> {
+    units : int
+    add(AbstractStockQuantity) : AbstractStockQuantity
+    subtract(AbstractStockQuantity) : AbstractStockQuantity
+    isGreaterThanOrEqual(AbstractStockQuantity) : boolean
+  }
+  class Timestamp <<VO>> {
+    value : Instant
+  }
+}
+
+' =====================================================================
+' INTERNAL AGGREGATE ASSOCIATIONS (solid)
+' =====================================================================
+User --> "1" Email
+User --> "1" PersonName
+User --> "1" PasswordHash
+User *--> "1..*" UserRole
+User --> "1" UserStatus
+
+PlantSector --> "1" SectorCode
+PlantSector --> "1" Designation
+
+ConveyorLine --> "1" SectorId
+ConveyorLine --> "1" LineCode
+ConveyorLine --> "1" Designation
+ConveyorLine --> "1" LineStatus
+
+SensorNode --> "1" LineId
+SensorNode --> "1" SensorSerialNumber
+SensorNode --> "1" SensorType
+
+ThresholdRule --> "1" SensorId
+ThresholdRule --> "1" TelemetryValue : warning/critical
+
+TelemetryReading --> "1" SensorId
+TelemetryReading --> "1" TelemetryValue : raw/avg/median
+TelemetryReading --> "1" Timestamp
+
+AnomalyAlert --> "1" SensorId
+AnomalyAlert --> "1" LineId
+AnomalyAlert --> "1" AlertSeverity
+AnomalyAlert --> "1" AlertStatus
+AnomalyAlert --> "1" Timestamp
+
+SparePartStock --> "1" PartCode
+SparePartStock --> "1" Designation
+SparePartStock --> "1" AbstractStockQuantity
+
+' =====================================================================
+' CROSS-AGGREGATE REFERENCES (dashed, by identity only)
+' =====================================================================
+ConveyorLine ..> PlantSector : sectorId
+SensorNode ..> ConveyorLine : lineId
+ThresholdRule ..> SensorNode : sensorId
+TelemetryReading ..> SensorNode : sensorId
+AnomalyAlert ..> SensorNode : sensorId
+AnomalyAlert ..> ConveyorLine : lineId
+AnomalyAlert ..> User : acknowledgedBy (UserId)
+
+legend bottom
+  <back:#FFE9A8>  Aggregate root  </back>  <back:#D6E8FF>  Entity (inside an aggregate)  </back>  <back:#DDF3DD>  Value object  </back>  <back:#F0E0F7>  Enumeration  </back>
+  ""──▶"" owned by aggregate      ""┈┈▶"" reference to another aggregate by identity only
+  «id» marks identity attributes. Shared kernel types are used across aggregates without drawn arrows.
+endlegend
+
+@enduml
