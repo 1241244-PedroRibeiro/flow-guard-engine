@@ -14,7 +14,7 @@ import {
   ResourceConflictException,
   UnauthorizedDomainException,
   ForbiddenDomainException,
-} from '../domain/common/DomainError';
+} from '../domain/common/exceptions';
 
 interface PgDatabaseError extends Error {
   code?: string;
@@ -28,49 +28,53 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
+    
+    // Type cast seguro para contornar o erro TS18046 no strict mode
+    // após validarmos o tipo com instanceof
+    const err = exception as any;
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let errorName = 'Internal Server Error';
     let message = 'An unexpected internal server error occurred.';
     let details: string[] | undefined;
 
-    // 1. Domain & Application Custom Exceptions (Clean Architecture Mapping - KB §19)
-    if (exception instanceof EntityNotFoundException) {
+    // 1. Domain & Application Custom Exceptions
+    if (err instanceof EntityNotFoundException) {
       status = HttpStatus.NOT_FOUND;
       errorName = 'Not Found';
-      message = exception.message;
+      message = err.message;
     } else if (
-      exception instanceof ResourceConflictException ||
-      exception instanceof OptimisticConcurrencyConflictException
+      err instanceof ResourceConflictException ||
+      err instanceof OptimisticConcurrencyConflictException
     ) {
       status = HttpStatus.CONFLICT;
       errorName = 'Conflict';
-      message = exception.message;
-      details = exception.details;
-    } else if (exception instanceof DomainInvariantException) {
+      message = err.message;
+      details = err.details;
+    } else if (err instanceof DomainInvariantException) {
       status = HttpStatus.UNPROCESSABLE_ENTITY;
       errorName = 'Unprocessable Entity';
-      message = exception.message;
-      details = exception.details;
-    } else if (exception instanceof UnauthorizedDomainException) {
+      message = err.message;
+      details = err.details;
+    } else if (err instanceof UnauthorizedDomainException) {
       status = HttpStatus.UNAUTHORIZED;
       errorName = 'Unauthorized';
-      message = exception.message;
+      message = err.message;
       response.setHeader('WWW-Authenticate', 'Bearer realm="FlowGuard"');
-    } else if (exception instanceof ForbiddenDomainException) {
+    } else if (err instanceof ForbiddenDomainException) {
       status = HttpStatus.FORBIDDEN;
       errorName = 'Forbidden';
-      message = exception.message;
-    } else if (exception instanceof DomainError) {
+      message = err.message;
+    } else if (err instanceof DomainError) {
       status = HttpStatus.BAD_REQUEST;
       errorName = 'Bad Request';
-      message = exception.message;
-      details = exception.details;
+      message = err.message;
+      details = err.details;
     }
-    // 2. Standard NestJS HttpExceptions (Guards, Boundary Validation Pipes)
-    else if (exception instanceof HttpException) {
-      status = exception.getStatus();
-      const resBody = exception.getResponse();
+    // 2. Standard NestJS HttpExceptions
+    else if (err instanceof HttpException) {
+      status = err.getStatus();
+      const resBody = err.getResponse();
 
       if (typeof resBody === 'string') {
         message = resBody;
@@ -93,31 +97,31 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         response.setHeader('WWW-Authenticate', 'Bearer realm="FlowGuard"');
       }
     }
-    // 3. Native PostgreSQL Constraint Violations (ON DELETE RESTRICT / UNIQUE / CHECK - ADR-0003)
-    else if (this.isPgDatabaseError(exception)) {
-      if (exception.code === '23503') {
+    // 3. Native PostgreSQL Constraint Violations
+    else if (this.isPgDatabaseError(err)) {
+      if (err.code === '23503') {
         status = HttpStatus.CONFLICT;
         errorName = 'Conflict';
         message =
           'Cannot delete or modify record because it is actively referenced by dependent industrial assets.';
-        details = exception.constraint
-          ? [`Foreign key constraint ${exception.constraint} (ON DELETE RESTRICT) blocked operation.`]
+        details = err.constraint
+          ? [`Foreign key constraint ${err.constraint} (ON DELETE RESTRICT) blocked operation.`]
           : undefined;
-      } else if (exception.code === '23505') {
+      } else if (err.code === '23505') {
         status = HttpStatus.CONFLICT;
         errorName = 'Conflict';
         message = 'A record with the provided unique business code or email already exists.';
-        details = exception.constraint ? [`Unique constraint violated: ${exception.constraint}`] : undefined;
-      } else if (exception.code === '23514') {
+        details = err.constraint ? [`Unique constraint violated: ${err.constraint}`] : undefined;
+      } else if (err.code === '23514') {
         status = HttpStatus.UNPROCESSABLE_ENTITY;
         errorName = 'Unprocessable Entity';
         message = 'Database domain invariant check constraint violated.';
-        details = exception.constraint ? [`Check constraint violated: ${exception.constraint}`] : undefined;
+        details = err.constraint ? [`Check constraint violated: ${err.constraint}`] : undefined;
       } else if (process.env.NODE_ENV !== 'test') {
-        console.error('[FlowGuard Unhandled DB Error]:', exception);
+        console.error('[FlowGuard Unhandled DB Error]:', err);
       }
     } else if (process.env.NODE_ENV !== 'test') {
-      console.error('[FlowGuard Unhandled Exception]:', exception);
+      console.error('[FlowGuard Unhandled Exception]:', err);
     }
 
     response.status(status).json({
