@@ -1,0 +1,34 @@
+info:
+  name: 01 Admin Login
+  type: http
+  seq: 1
+http:
+  method: POST
+  url: '{{baseUrl}}/auth/login'
+  body:
+    type: json
+    data: |-
+      {
+        "email": "admin@flowguard.industrial",
+        "password": "FlowGuard#2026!"
+      }
+  auth:
+    type: none
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("AC1 - Admin login returns 201 CREATED and Bearer token", function() {
+        	expect(res.getStatus()).to.equal(201);
+        	const data = res.getBody();
+        	expect(data.tokenType).to.equal("Bearer");
+        	expect(data.accessToken).to.be.a("string");
+        	expect(data.expiresIn).to.equal(28800);
+        	expect(data.user.passwordHash).to.be.undefined;
+        	bru.setEnvVar("adminToken", data.accessToken);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

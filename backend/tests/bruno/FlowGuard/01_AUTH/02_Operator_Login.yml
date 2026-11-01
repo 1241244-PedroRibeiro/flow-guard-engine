@@ -1,0 +1,30 @@
+info:
+  name: 02 Operator Login
+  type: http
+  seq: 2
+http:
+  method: POST
+  url: '{{baseUrl}}/auth/login'
+  body:
+    type: json
+    data: |-
+      {
+        "email": "op.silva@flowguard.industrial",
+        "password": "FlowGuard#2026!"
+      }
+  auth:
+    type: none
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Operator login returns 201 CREATED and Bearer token", function() {
+        	expect(res.getStatus()).to.equal(201);
+        	const data = res.getBody();
+        	bru.setEnvVar("operatorToken", data.accessToken);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

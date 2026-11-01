@@ -1,0 +1,30 @@
+info:
+  name: 05 Register Duplicate Email
+  type: http
+  seq: 5
+http:
+  method: POST
+  url: '{{baseUrl}}/auth/register'
+  body:
+    type: json
+    data: |-
+      {
+        "firstName": "Hacker",
+        "lastName": "Man",
+        "email": "{{hackerEmail}}",
+        "password": "Password123!"
+      }
+  auth:
+    type: none
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("AC3 - Duplicate email returns 409 Conflict", function() {
+        	expect(res.getStatus()).to.equal(409);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

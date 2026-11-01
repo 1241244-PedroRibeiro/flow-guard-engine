@@ -1,0 +1,16 @@
+name: local
+variables:
+  - name: baseUrl
+    value: http://localhost:3050/api/v1
+  - name: adminToken
+    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMTExMTExMS0xMTExLTQxMTEtODExMS0xMTExMTExMTExMDEiLCJlbWFpbCI6ImFkbWluQGZsb3dndWFyZC5pbmR1c3RyaWFsIiwicm9sZXMiOlsiQURNSU5JU1RSQVRPUiJdLCJpYXQiOjE3OTM1NzY0MzksImV4cCI6MTc5MzYwNTIzOX0.Ptpf0uIHp3E8steAJs7pNAhrbRbzcADgA5UQIg8MlV0
+  - name: testUserId
+    value: baaaa956-6f66-4f1f-ab1e-87a1bebe817b
+  - name: newUserId
+    value: 4f075a4b-2680-481e-8086-9bce8d1107e0
+  - name: operatorToken
+    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzMzMzMzMzMy0zMzMzLTQzMzMtODMzMy0zMzMzMzMzMzMzMDMiLCJlbWFpbCI6Im9wLnNpbHZhQGZsb3dndWFyZC5pbmR1c3RyaWFsIiwicm9sZXMiOlsiT1BFUkFUT1IiXSwiaWF0IjoxNzkzNTc2NDM5LCJleHAiOjE3OTM2MDUyMzl9.4mGwPY6RL0QEwLcmNzkzKG6fLYDvDPxLXbtrpGDW7Gs
+  - name: hackerEmail
+    value: hacker-1793576440@flowguard.industrial
+  - name: staffEmail
+    value: eng-1793576440@flowguard.industrial

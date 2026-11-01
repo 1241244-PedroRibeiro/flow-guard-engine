@@ -1,0 +1,36 @@
+info:
+  name: 04 Public Register & Mass Assignment Defense
+  type: http
+  seq: 4
+http:
+  method: POST
+  url: '{{baseUrl}}/auth/register'
+  body:
+    type: json
+    data: |-
+      {
+        "firstName": "Hacker",
+        "lastName": "Man",
+        "email": "hacker-{{$timestamp}}@flowguard.industrial",
+        "password": "Password123!",
+        "roles": ["ADMINISTRATOR"],
+        "status": "ACTIVE"
+      }
+  auth:
+    type: none
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("AC3 - Public register forces PENDING_REGISTRATION and OPERATOR role", function() {
+        	expect(res.getStatus()).to.equal(201);
+        	const data = res.getBody();
+        	expect(data.status).to.equal("PENDING_REGISTRATION");
+        	expect(data.roles).to.be.an("array").that.deep.equals(["OPERATOR"]);
+        	bru.setEnvVar("hackerEmail", data.email);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

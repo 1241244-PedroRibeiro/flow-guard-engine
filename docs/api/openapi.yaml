@@ -15,7 +15,7 @@ info:
     name: Pedro Ribeiro
     url: https://github.com/1241244-PedroRibeiro/flow-guard-engine
 servers:
-  - url: http://localhost:3000/api/v1
+  - url: http://localhost:3050/api/v1
     description: Local Development & Automated Testing Environment
   - url: https://api.flowguard.industrial/api/v1
     description: Production Industrial Telemetry Gateway

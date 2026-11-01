@@ -1,0 +1,30 @@
+info:
+  name: 10 Admin Update User Roles
+  type: http
+  seq: 10
+http:
+  method: PATCH
+  url: '{{baseUrl}}/users/{{newUserId}}/roles'
+  body:
+    type: json
+    data: |-
+      {
+        "roles": ["OPERATOR", "ENGINEER"]
+      }
+  auth:
+    type: bearer
+    token: '{{adminToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("AC4 - Admin updates user roles successfully with 200 OK", function() {
+        	expect(res.getStatus()).to.equal(200);
+        	const data = res.getBody();
+        	expect(data.roles).to.be.an("array").that.include.members(["OPERATOR", "ENGINEER"]);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
