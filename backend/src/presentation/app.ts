@@ -18,7 +18,7 @@ export async function createApp(): Promise<INestApplication> {
 
   // Strict CORS allowlist configuration (KB §9.4, ADR-0005)
   const allowedOriginsRaw =
-    process.env.CORS_ALLOWED_ORIGINS ?? 'http://localhost:5173,http://localhost:3000';
+    process.env.CORS_ALLOWED_ORIGINS ?? 'http://localhost:5173,http://localhost:3050';
   const allowedOrigins = allowedOriginsRaw
     .split(',')
     .map((origin) => origin.trim())
