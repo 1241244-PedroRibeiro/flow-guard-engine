@@ -98,3 +98,6 @@ export async function closeDatabasePool(): Promise<void> {
     sharedPool = null;
   }
 }
+
+// Exportação explícita da instância para injeção no NestJS (AppModule)
+export const pool = getDatabasePool();
