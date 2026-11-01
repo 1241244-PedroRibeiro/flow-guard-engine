@@ -1,0 +1,1664 @@
+# yaml-language-server: $schema=https://spec.openapis.org/oas/3.0/schema/2021-09-28
+openapi: 3.0.3
+info:
+  title: FlowGuard — Industrial Line & Conveyor Telemetry Engine REST API
+  description: >
+    Formal OpenAPI 3.0.3 machine-readable contract for the FlowGuard Back-End Modular Monolith.
+    Covers stateless JWT/Argon2id authentication, RBAC user governance, hierarchical plant sectors
+    and conveyor lines, sensor nodes and threshold rules, real-time sliding-window telemetry ingestion,
+    anomaly alert lifecycles, abstract spare-part inventory control, and OpenMetrics observability.
+  version: 1.0.0
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  contact:
+    name: Pedro Ribeiro
+    url: https://github.com/1241244-PedroRibeiro/flow-guard-engine
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local Development & Automated Testing Environment
+  - url: https://api.flowguard.industrial/api/v1
+    description: Production Industrial Telemetry Gateway
+
+tags:
+  - name: Diagnostics & Observability
+    description: Health probes and OpenMetrics / Prometheus scraping endpoints
+  - name: Authentication & Users
+    description: Stateless JWT authentication, Argon2id credential verification, and RBAC governance
+  - name: Plant Sectors
+    description: Industrial plant sector topology management with ON DELETE RESTRICT protection
+  - name: Conveyor Lines
+    description: Motorized conveyor line management, CQRS health summaries, and optimistic-locked status transitions
+  - name: Sensor Nodes & Thresholds
+    description: Industrial transducer registration, calibration, and warning/critical threshold rules
+  - name: Telemetry Ingestion
+    description: High-frequency sensor stream ingestion and in-memory sliding-window statistical evaluation
+  - name: Anomaly Alerts
+    description: Real-time anomaly alert inspection, operator acknowledgement, and engineering resolution
+  - name: Spare Parts Inventory
+    description: Normalized non-negative integer spare-part stock management with pessimistic row locking
+
+paths:
+  # =========================================================================
+  # 1. DIAGNOSTICS & OBSERVABILITY
+  # =========================================================================
+  /health:
+    get:
+      summary: Liveness and database readiness diagnostic probe
+      operationId: getHealthStatus
+      tags:
+        - Diagnostics & Observability
+      security: []
+      responses:
+        '200':
+          description: Engine and PostgreSQL pool are healthy.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatusResponseDTO'
+        '503':
+          description: Service Unavailable; database pool unreachable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+
+  /metrics:
+    get:
+      summary: Expose real-time OpenMetrics / Prometheus telemetry counters (Roadmap Task 5)
+      operationId: scrapePrometheusMetrics
+      tags:
+        - Diagnostics & Observability
+      security: []
+      responses:
+        '200':
+          description: Prometheus exposition format text stream.
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: |
+                  # HELP flowguard_telemetry_readings_ingested_total Total sensor readings processed
+                  # TYPE flowguard_telemetry_readings_ingested_total counter
+                  flowguard_telemetry_readings_ingested_total{sensor_type="MOTOR_VIBRATION"} 14820
+                  # HELP flowguard_active_anomaly_alerts Current open or acknowledged alerts
+                  # TYPE flowguard_active_anomaly_alerts gauge
+                  flowguard_active_anomaly_alerts{severity="CRITICAL"} 1
+
+  # =========================================================================
+  # 2. AUTHENTICATION & USER GOVERNANCE (FG-AUTH)
+  # =========================================================================
+  /auth/login:
+    post:
+      summary: Authenticate user credentials (Argon2id) and issue stateless 8h shift JWT
+      operationId: loginUser
+      tags:
+        - Authentication & Users
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequestDTO'
+      responses:
+        '200':
+          description: Authentication successful; signed JWT issued.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+
+  /auth/register:
+    post:
+      summary: Public operator self-registration (creates account in PENDING_REGISTRATION status)
+      operationId: registerOperator
+      tags:
+        - Authentication & Users
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicRegisterRequestDTO'
+      responses:
+        '201':
+          description: Registration recorded awaiting administrator activation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+
+  /users:
+    post:
+      summary: Provision a new staff user account with explicit RBAC roles (ADMINISTRATOR only)
+      operationId: createUser
+      tags:
+        - Authentication & Users
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequestDTO'
+      responses:
+        '201':
+          description: Staff account provisioned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+    get:
+      summary: List system users with pagination and role/status filters (ADMINISTRATOR only)
+      operationId: listUsers
+      tags:
+        - Authentication & Users
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: role
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/UserRoleEnum'
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/UserStatusEnum'
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+      responses:
+        '200':
+          description: Paginated list of users.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUsersResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+
+  /users/{id}/status:
+    patch:
+      summary: Activate or deactivate a user account (ADMINISTRATOR only)
+      operationId: updateUserStatus
+      tags:
+        - Authentication & Users
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UuidPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserStatusRequestDTO'
+      responses:
+        '200':
+          description: User account status updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  /users/{id}/roles:
+    patch:
+      summary: Replace assigned RBAC roles for a user account (ADMINISTRATOR only)
+      operationId: updateUserRoles
+      tags:
+        - Authentication & Users
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UuidPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRolesRequestDTO'
+      responses:
+        '200':
+          description: User roles updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  # =========================================================================
+  # 3. PLANT SECTORS (FG-TOPO)
+  # =========================================================================
+  /plant-sectors:
+    post:
+      summary: Register a new industrial plant sector (ENGINEER / ADMINISTRATOR)
+      operationId: createPlantSector
+      tags:
+        - Plant Sectors
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePlantSectorRequestDTO'
+      responses:
+        '201':
+          description: Plant sector created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlantSectorResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+    get:
+      summary: List all plant sectors
+      operationId: listPlantSectors
+      tags:
+        - Plant Sectors
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: isActive
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Array of plant sectors.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlantSectorResponseDTO'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+
+  /plant-sectors/{id}:
+    get:
+      summary: Get plant sector details by UUID
+      operationId: getPlantSectorById
+      tags:
+        - Plant Sectors
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UuidPathParam'
+      responses:
+        '200':
+          description: Plant sector details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlantSectorResponseDTO'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    put:
+      summary: Update plant sector designation, description, or active status
+      operationId: updatePlantSector
+      tags:
+        - Plant Sectors
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UuidPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePlantSectorRequestDTO'
+      responses:
+        '200':
+          description: Plant sector updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlantSectorResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+    delete:
+      summary: Delete unreferenced plant sector (enforces ON DELETE RESTRICT)
+      operationId: deletePlantSector
+      tags:
+        - Plant Sectors
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UuidPathParam'
+      responses:
+        '204':
+          description: Plant sector deleted.
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          description: Conflict; sector contains conveyor lines and cannot be deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+
+  # =========================================================================
+  # 4. CONVEYOR LINES & CQRS HEALTH SUMMARIES (FG-TOPO, FG-QUERY)
+  # =========================================================================
+  /conveyor-lines:
+    post:
+      summary: Register a new conveyor line within a plant sector
+      operationId: createConveyorLine
+      tags:
+        - Conveyor Lines
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateConveyorLineRequestDTO'
+      responses:
+        '201':
+          description: Conveyor line registered.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConveyorLineHealthSummaryResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+    get:
+      summary: Query conveyor lines with pre-joined CQRS health summaries (v_conveyor_line_health_summary)
+      operationId: listConveyorLines
+      tags:
+        - Conveyor Lines
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: sectorId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: operationalStatus
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/LineStatusEnum'
+      responses:
+        '200':
+          description: List of conveyor line health summaries.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConveyorLineHealthSummaryResponseDTO'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+
+  /conveyor-lines/{id}:
+    get:
+      summary: Retrieve conveyor line details and health summary by UUID
+      operationId: getConveyorLineById
+      tags:
+        - Conveyor Lines
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UuidPathParam'
+      responses:
+        '200':
+          description: Conveyor line details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConveyorLineHealthSummaryResponseDTO'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    delete:
+      summary: Delete unreferenced conveyor line (enforces ON DELETE RESTRICT)
+      operationId: deleteConveyorLine
+      tags:
+        - Conveyor Lines
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UuidPathParam'
+      responses:
+        '204':
+          description: Conveyor line deleted.
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          description: Conflict; line has attached sensors or historical alerts.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+
+  /conveyor-lines/{id}/operational-status:
+    patch:
+      summary: Transition conveyor line operational status with optimistic version check (Roadmap Task 2)
+      operationId: updateConveyorLineOperationalStatus
+      tags:
+        - Conveyor Lines
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UuidPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateLineOperationalStatusRequestDTO'
+      responses:
+        '200':
+          description: Operational status transitioned and version incremented.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConveyorLineHealthSummaryResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          description: Conflict; optimistic concurrency version mismatch.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+        '422':
+          $ref: '#/components/responses/422Unprocessable'
+
+  # =========================================================================
+  # 5. SENSOR NODES & THRESHOLD RULES (FG-SENS)
+  # =========================================================================
+  /sensor-nodes:
+    post:
+      summary: Attach a new sensor transducer to a conveyor line
+      operationId: createSensorNode
+      tags:
+        - Sensor Nodes & Thresholds
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSensorNodeRequestDTO'
+      responses:
+        '201':
+          description: Sensor node registered.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SensorNodeResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+    get:
+      summary: List sensor nodes with optional filtering by line, type, or active state
+      operationId: listSensorNodes
+      tags:
+        - Sensor Nodes & Thresholds
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: lineId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: sensorType
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/SensorTypeEnum'
+        - name: isActive
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Array of sensor nodes with active threshold rules.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SensorNodeResponseDTO'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+
+  /sensor-nodes/{id}/threshold-rule:
+    put:
+      summary: Configure or update warning and critical threshold bounds for a sensor node
+      operationId: upsertSensorThresholdRule
+      tags:
+        - Sensor Nodes & Thresholds
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UuidPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertThresholdRuleRequestDTO'
+      responses:
+        '200':
+          description: Threshold rule configured.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThresholdRuleResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '422':
+          description: Unprocessable Entity; criticalLimit must be strictly greater than warningLimit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+
+  /sensor-nodes/{id}/deactivate:
+    patch:
+      summary: Soft-deactivate a sensor node while preserving historical telemetry
+      operationId: deactivateSensorNode
+      tags:
+        - Sensor Nodes & Thresholds
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UuidPathParam'
+      responses:
+        '200':
+          description: Sensor node deactivated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SensorNodeResponseDTO'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  # =========================================================================
+  # 6. REAL-TIME TELEMETRY INGESTION & SLIDING WINDOW (FG-INGEST)
+  # =========================================================================
+  /sensor-nodes/{id}/telemetry-readings:
+    post:
+      summary: Ingest real-time sensor reading, compute sliding-window stats, and evaluate anomaly rules
+      operationId: ingestTelemetryReading
+      tags:
+        - Telemetry Ingestion
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UuidPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IngestTelemetryReadingRequestDTO'
+      responses:
+        '201':
+          description: Reading ingested, sliding window updated, and evaluation returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TelemetryIngestionEvaluationResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '422':
+          description: Unprocessable Entity; physically impossible value or sensor/line is deactivated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+    get:
+      summary: Query paginated historical telemetry readings and sliding-window metrics for a sensor
+      operationId: listTelemetryReadings
+      tags:
+        - Telemetry Ingestion
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UuidPathParam'
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+      responses:
+        '200':
+          description: Paginated telemetry readings.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTelemetryReadingsResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  # =========================================================================
+  # 7. ANOMALY ALERTS & OPERATOR ACKNOWLEDGEMENT (FG-ALERT)
+  # =========================================================================
+  /anomaly-alerts:
+    get:
+      summary: List anomaly alerts filtered by status, severity, or conveyor line
+      operationId: listAnomalyAlerts
+      tags:
+        - Anomaly Alerts
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/AlertStatusEnum'
+        - name: severity
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/AlertSeverityEnum'
+        - name: lineId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+      responses:
+        '200':
+          description: Paginated anomaly alerts.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAnomalyAlertsResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+
+  /anomaly-alerts/{id}/acknowledge:
+    post:
+      summary: Intentional command to acknowledge an OPEN anomaly alert (OPERATOR+)
+      operationId: acknowledgeAnomalyAlert
+      tags:
+        - Anomaly Alerts
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UuidPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcknowledgeAlertRequestDTO'
+      responses:
+        '200':
+          description: Alert transitioned to ACKNOWLEDGED.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnomalyAlertResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          description: Conflict; alert is already acknowledged or resolved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+
+  /anomaly-alerts/{id}/resolve:
+    post:
+      summary: Intentional command to resolve an ACKNOWLEDGED alert (ENGINEER / ADMINISTRATOR)
+      operationId: resolveAnomalyAlert
+      tags:
+        - Anomaly Alerts
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UuidPathParam'
+      responses:
+        '200':
+          description: Alert transitioned to RESOLVED.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnomalyAlertResponseDTO'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          description: Conflict; alert must be ACKNOWLEDGED before resolution.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+
+  # =========================================================================
+  # 8. SPARE PARTS ABSTRACT INVENTORY (FG-STOCK)
+  # =========================================================================
+  /spare-parts:
+    post:
+      summary: Register a new spare-part catalog item with initial abstract integer stock
+      operationId: createSparePartStock
+      tags:
+        - Spare Parts Inventory
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSparePartRequestDTO'
+      responses:
+        '201':
+          description: Spare part registered.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SparePartStockResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+        '422':
+          $ref: '#/components/responses/422Unprocessable'
+    get:
+      summary: List all spare parts and current abstract stock balances
+      operationId: listSpareParts
+      tags:
+        - Spare Parts Inventory
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Array of spare-part stock items.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SparePartStockResponseDTO'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+
+  /spare-parts/{id}/replenish:
+    post:
+      summary: Increase abstract spare-part stock units (ENGINEER / ADMINISTRATOR)
+      operationId: replenishSparePartStock
+      tags:
+        - Spare Parts Inventory
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UuidPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StockAdjustmentRequestDTO'
+      responses:
+        '200':
+          description: Stock replenished atomically.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SparePartStockResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  /spare-parts/{id}/consume:
+    post:
+      summary: Deduct abstract spare-part stock units under SELECT FOR UPDATE row lock (prevents < 0)
+      operationId: consumeSparePartStock
+      tags:
+        - Spare Parts Inventory
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UuidPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StockAdjustmentRequestDTO'
+      responses:
+        '200':
+          description: Stock deducted atomically.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SparePartStockResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '422':
+          description: Unprocessable Entity; insufficient stock units available (would result in negative balance).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Stateless RFC 7519 JWT issued by POST /api/v1/auth/login.
+
+  parameters:
+    UuidPathParam:
+      name: id
+      in: path
+      required: true
+      description: Unique UUIDv4 identifier of the target Aggregate Root
+      schema:
+        type: string
+        format: uuid
+    PageParam:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PageSizeParam:
+      name: pageSize
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+  responses:
+    400BadRequest:
+      description: Bad Request; Joi/Zod boundary validation failed on input payload or parameters.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseDTO'
+    401Unauthorized:
+      description: Unauthorized; Bearer token missing, invalid, or expired.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseDTO'
+    403Forbidden:
+      description: Forbidden; caller lacks required RBAC role or account is not ACTIVE.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseDTO'
+    404NotFound:
+      description: Not Found; requested resource UUID or business code does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseDTO'
+    409Conflict:
+      description: Conflict; duplicate unique business code, ON DELETE RESTRICT violation, or optimistic version mismatch.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseDTO'
+    422Unprocessable:
+      description: Unprocessable Entity; domain invariant violation (e.g., negative stock or invalid threshold bounds).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseDTO'
+
+  schemas:
+    # -----------------------------------------------------------------------
+    # Enumerations
+    # -----------------------------------------------------------------------
+    UserRoleEnum:
+      type: string
+      enum: [OPERATOR, ENGINEER, ADMINISTRATOR]
+
+    UserStatusEnum:
+      type: string
+      enum: [ACTIVE, DEACTIVATED, PENDING_REGISTRATION]
+
+    LineStatusEnum:
+      type: string
+      enum: [RUNNING, DEGRADED_WARNING, FAULT_HALTED, MAINTENANCE, DEACTIVATED]
+
+    SensorTypeEnum:
+      type: string
+      enum: [BELT_VELOCITY, MOTOR_VIBRATION, BEARING_TEMPERATURE, OPTICAL_COUNTER]
+
+    AlertSeverityEnum:
+      type: string
+      enum: [WARNING, CRITICAL]
+
+    AlertStatusEnum:
+      type: string
+      enum: [OPEN, ACKNOWLEDGED, RESOLVED]
+
+    # -----------------------------------------------------------------------
+    # Common & Diagnostic Schemas
+    # -----------------------------------------------------------------------
+    HealthStatusResponseDTO:
+      type: object
+      required: [status, version, timestamp]
+      properties:
+        status:
+          type: string
+          example: 'ok'
+        version:
+          type: string
+          example: '1.0.0'
+        timestamp:
+          type: string
+          format: date-time
+          example: '2026-10-28T14:00:00.000Z'
+
+    ErrorResponseDTO:
+      type: object
+      required: [timestamp, status, error, message]
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: '2026-10-28T14:32:10.405Z'
+        status:
+          type: integer
+          example: 409
+        error:
+          type: string
+          example: 'Conflict'
+        message:
+          type: string
+          example: 'Cannot delete PlantSector SEC-LOGISTICS-A: actively referenced by 3 conveyor lines.'
+        path:
+          type: string
+          example: '/api/v1/plant-sectors/a1b2c3d4-e5f6-4a5b-8c9d-001122334455'
+        details:
+          type: array
+          items:
+            type: string
+
+    # -----------------------------------------------------------------------
+    # Auth & User Schemas
+    # -----------------------------------------------------------------------
+    LoginRequestDTO:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: 'eng.ribeiro@flowguard.industrial'
+        password:
+          type: string
+          minLength: 8
+          example: 'Str0ng!ShiftPassword#2026'
+
+    LoginResponseDTO:
+      type: object
+      required: [accessToken, tokenType, expiresIn, user]
+      properties:
+        accessToken:
+          type: string
+        tokenType:
+          type: string
+          example: 'Bearer'
+        expiresIn:
+          type: integer
+          example: 28800
+        user:
+          $ref: '#/components/schemas/UserResponseDTO'
+
+    PublicRegisterRequestDTO:
+      type: object
+      required: [firstName, lastName, email, password]
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 75
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 75
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+
+    CreateUserRequestDTO:
+      type: object
+      required: [firstName, lastName, email, password, roles]
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 75
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 75
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        roles:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/UserRoleEnum'
+
+    UpdateUserStatusRequestDTO:
+      type: object
+      required: [status]
+      properties:
+        status:
+          $ref: '#/components/schemas/UserStatusEnum'
+
+    UpdateUserRolesRequestDTO:
+      type: object
+      required: [roles]
+      properties:
+        roles:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/UserRoleEnum'
+
+    UserResponseDTO:
+      type: object
+      required: [id, firstName, lastName, email, status, roles, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        status:
+          $ref: '#/components/schemas/UserStatusEnum'
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserRoleEnum'
+        createdAt:
+          type: string
+          format: date-time
+
+    PaginatedUsersResponseDTO:
+      type: object
+      required: [items, total, page, pageSize, totalPages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserResponseDTO'
+        total:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        totalPages:
+          type: integer
+
+    # -----------------------------------------------------------------------
+    # Plant Topology Schemas
+    # -----------------------------------------------------------------------
+    CreatePlantSectorRequestDTO:
+      type: object
+      required: [sectorCode, name]
+      properties:
+        sectorCode:
+          type: string
+          minLength: 2
+          maxLength: 30
+          example: 'SEC-LOGISTICS-A'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 120
+          example: 'Automated Sorting Bay Alpha'
+        description:
+          type: string
+          nullable: true
+
+    UpdatePlantSectorRequestDTO:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 120
+        description:
+          type: string
+          nullable: true
+        isActive:
+          type: boolean
+
+    PlantSectorResponseDTO:
+      type: object
+      required: [id, sectorCode, name, isActive, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        sectorCode:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateConveyorLineRequestDTO:
+      type: object
+      required: [sectorId, lineCode, name]
+      properties:
+        sectorId:
+          type: string
+          format: uuid
+        lineCode:
+          type: string
+          minLength: 2
+          maxLength: 30
+          example: 'LINE-SORT-NORTH-01'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 150
+          example: 'North Parcel Sorter Primary Belt'
+
+    UpdateLineOperationalStatusRequestDTO:
+      type: object
+      required: [operationalStatus, expectedVersion]
+      properties:
+        operationalStatus:
+          $ref: '#/components/schemas/LineStatusEnum'
+        expectedVersion:
+          type: integer
+          minimum: 1
+          example: 3
+        reason:
+          type: string
+
+    ConveyorLineHealthSummaryResponseDTO:
+      type: object
+      required:
+        - id
+        - sectorId
+        - sectorCode
+        - lineCode
+        - name
+        - operationalStatus
+        - isActive
+        - version
+        - activeSensorCount
+        - openWarningAlertCount
+        - openCriticalAlertCount
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        sectorId:
+          type: string
+          format: uuid
+        sectorCode:
+          type: string
+        lineCode:
+          type: string
+        name:
+          type: string
+        operationalStatus:
+          $ref: '#/components/schemas/LineStatusEnum'
+        isActive:
+          type: boolean
+        version:
+          type: integer
+        activeSensorCount:
+          type: integer
+        openWarningAlertCount:
+          type: integer
+        openCriticalAlertCount:
+          type: integer
+        updatedAt:
+          type: string
+          format: date-time
+
+    # -----------------------------------------------------------------------
+    # Sensor Node & Telemetry Schemas
+    # -----------------------------------------------------------------------
+    CreateSensorNodeRequestDTO:
+      type: object
+      required: [lineId, serialNumber, sensorType]
+      properties:
+        lineId:
+          type: string
+          format: uuid
+        serialNumber:
+          type: string
+          minLength: 3
+          maxLength: 40
+          example: 'SN-VIB-9001'
+        sensorType:
+          $ref: '#/components/schemas/SensorTypeEnum'
+
+    UpsertThresholdRuleRequestDTO:
+      type: object
+      required: [warningLimit, criticalLimit, unit]
+      properties:
+        warningLimit:
+          type: number
+          format: double
+          example: 4.5
+        criticalLimit:
+          type: number
+          format: double
+          example: 7.1
+        unit:
+          type: string
+          example: 'mm/s'
+        windowSizeSamples:
+          type: integer
+          minimum: 3
+          maximum: 128
+          default: 32
+
+    ThresholdRuleResponseDTO:
+      type: object
+      required: [id, sensorId, warningLimit, criticalLimit, unit, windowSizeSamples, version]
+      properties:
+        id:
+          type: string
+          format: uuid
+        sensorId:
+          type: string
+          format: uuid
+        warningLimit:
+          type: number
+          format: double
+        criticalLimit:
+          type: number
+          format: double
+        unit:
+          type: string
+        windowSizeSamples:
+          type: integer
+        version:
+          type: integer
+
+    SensorNodeResponseDTO:
+      type: object
+      required: [id, lineId, serialNumber, sensorType, isActive]
+      properties:
+        id:
+          type: string
+          format: uuid
+        lineId:
+          type: string
+          format: uuid
+        serialNumber:
+          type: string
+        sensorType:
+          $ref: '#/components/schemas/SensorTypeEnum'
+        isActive:
+          type: boolean
+        thresholdRule:
+          $ref: '#/components/schemas/ThresholdRuleResponseDTO'
+
+    IngestTelemetryReadingRequestDTO:
+      type: object
+      required: [rawValue, unit]
+      properties:
+        rawValue:
+          type: number
+          format: double
+          example: 7.85
+        unit:
+          type: string
+          example: 'mm/s'
+        recordedAt:
+          type: string
+          format: date-time
+
+    TelemetryReadingResponseDTO:
+      type: object
+      required: [id, sensorId, rawValue, movingAverage, movingMedian, unit, windowSampleCount, recordedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        sensorId:
+          type: string
+          format: uuid
+        rawValue:
+          type: number
+          format: double
+        movingAverage:
+          type: number
+          format: double
+        movingMedian:
+          type: number
+          format: double
+        unit:
+          type: string
+        windowSampleCount:
+          type: integer
+        recordedAt:
+          type: string
+          format: date-time
+
+    TelemetryIngestionEvaluationResponseDTO:
+      type: object
+      required: [reading, evaluation]
+      properties:
+        reading:
+          $ref: '#/components/schemas/TelemetryReadingResponseDTO'
+        evaluation:
+          type: object
+          required: [breachDetected, previousLineStatus, newLineStatus]
+          properties:
+            breachDetected:
+              type: boolean
+            severity:
+              $ref: '#/components/schemas/AlertSeverityEnum'
+            previousLineStatus:
+              $ref: '#/components/schemas/LineStatusEnum'
+            newLineStatus:
+              $ref: '#/components/schemas/LineStatusEnum'
+            triggeredAlertId:
+              type: string
+              format: uuid
+              nullable: true
+
+    PaginatedTelemetryReadingsResponseDTO:
+      type: object
+      required: [items, total, page, pageSize, totalPages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TelemetryReadingResponseDTO'
+        total:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        totalPages:
+          type: integer
+
+    # -----------------------------------------------------------------------
+    # Anomaly Alert & Spare Parts Schemas
+    # -----------------------------------------------------------------------
+    AcknowledgeAlertRequestDTO:
+      type: object
+      required: [diagnosticNote]
+      properties:
+        diagnosticNote:
+          type: string
+          minLength: 3
+          maxLength: 500
+
+    AnomalyAlertResponseDTO:
+      type: object
+      required: [id, sensorId, lineId, severity, status, message, triggeredAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        sensorId:
+          type: string
+          format: uuid
+        lineId:
+          type: string
+          format: uuid
+        severity:
+          $ref: '#/components/schemas/AlertSeverityEnum'
+        status:
+          $ref: '#/components/schemas/AlertStatusEnum'
+        message:
+          type: string
+        diagnosticNote:
+          type: string
+          nullable: true
+        triggeredAt:
+          type: string
+          format: date-time
+        acknowledgedAt:
+          type: string
+          format: date-time
+          nullable: true
+        acknowledgedBy:
+          type: string
+          format: uuid
+          nullable: true
+        resolvedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    PaginatedAnomalyAlertsResponseDTO:
+      type: object
+      required: [items, total, page, pageSize, totalPages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnomalyAlertResponseDTO'
+        total:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        totalPages:
+          type: integer
+
+    CreateSparePartRequestDTO:
+      type: object
+      required: [partCode, name, initialStockUnits]
+      properties:
+        partCode:
+          type: string
+          minLength: 2
+          maxLength: 30
+          example: 'PRT-BRG-6204'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 150
+          example: 'High-Speed Conveyor Roller Bearing SKF-6204'
+        initialStockUnits:
+          type: integer
+          minimum: 0
+          example: 20
+
+    StockAdjustmentRequestDTO:
+      type: object
+      required: [units, reason]
+      properties:
+        units:
+          type: integer
+          minimum: 1
+          example: 2
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 255
+
+    SparePartStockResponseDTO:
+      type: object
+      required: [id, partCode, name, stockUnits, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        partCode:
+          type: string
+        name:
+          type: string
+        stockUnits:
+          type: integer
+          minimum: 0
+        updatedAt:
+          type: string
+          format: date-time
