@@ -1,0 +1,21 @@
+info:
+  name: FG04 Ingest Telemetry — 422 on unit mismatch
+  type: http
+  seq: 5
+http:
+  method: POST
+  url: '{{baseUrl}}/sensor-nodes/{{sensorPrimaryId}}/telemetry-readings'
+  body:
+    type: json
+    data: |-
+      { "rawValue": 3.0, "unit": "m/s" }
+  auth:
+    type: bearer
+    token: '{{adminToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("AC3 — 422 on unit mismatch", function() {
+          expect(res.getStatus()).to.equal(422);
+        });

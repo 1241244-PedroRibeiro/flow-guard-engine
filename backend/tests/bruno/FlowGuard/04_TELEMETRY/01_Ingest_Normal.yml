@@ -1,0 +1,30 @@
+info:
+  name: FG04 Ingest Telemetry — Normal
+  type: http
+  seq: 1
+http:
+  method: POST
+  url: '{{baseUrl}}/sensor-nodes/{{sensorPrimaryId}}/telemetry-readings'
+  body:
+    type: json
+    data: |-
+      { "rawValue": 3.2, "unit": "mm/s" }
+  auth:
+    type: bearer
+    token: '{{adminToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("AC1 — 201 normal ingestion, no breach", function() {
+          expect(res.getStatus()).to.equal(201);
+          const b = res.getBody();
+          expect(b.reading.rawValue).to.equal(3.2);
+          expect(b.reading.windowSampleCount).to.be.a("number");
+          expect(b.evaluation.breachDetected).to.equal(false);
+          expect(b.evaluation.triggeredAlertId).to.be.null;
+          bru.setEnvVar("lastReadingId", b.reading.id);
+        });
+settings:
+  encodeUrl: true
+  timeout: 5000
