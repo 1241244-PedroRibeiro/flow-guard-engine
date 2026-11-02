@@ -28,7 +28,7 @@ export class SensorNodeMapper {
                 ? ThresholdRule.reconstitute(
                       row.tr_id,
                       row.id,
-                      // CORREÇÃO #4 — cast explícito: pg pode devolver DOUBLE PRECISION como string
+                      // CORRECTION: Convert string values to numbers before creating TelemetryValue instances. This ensures that the domain model receives the correct numeric types.
                       TelemetryValue.create(Number(row.tr_warning_limit), row.tr_unit!),
                       TelemetryValue.create(Number(row.tr_critical_limit), row.tr_unit!),
                       Number(row.tr_window_size_samples),

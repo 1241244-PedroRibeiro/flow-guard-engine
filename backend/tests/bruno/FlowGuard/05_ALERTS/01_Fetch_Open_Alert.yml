@@ -20,6 +20,5 @@ runtime:
           expect(res.getStatus()).to.equal(201);
         });
         test("AC1 — 200 OK with paginated alerts", function() {
-          // Assume que o backend já processou o breach e criou o alerta
-          // A chamada seguinte (GET) será feita num pedido separado.
+          // Assumes that the backend returns a paginated response with a 'data' array containing the alerts.
         });

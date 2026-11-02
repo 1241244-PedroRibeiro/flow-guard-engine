@@ -1,26 +1,26 @@
 # Knowledge Base: FlowGuard (Industrial Line & Conveyor Telemetry & Anomaly Detection Engine) — Extended Edition
 
-> **Metadados:** Versão 2.4 | Âmbito: Projeto Pessoal (FlowGuard) | Última atualização: Outubro 2026
-> 
-> **Prompt de Sistema Sugerido para Chat:**
-> *"Usa esta Knowledge Base como fonte de verdade absoluta para o projeto FlowGuard. Quando responderes, cita a secção (ex: ver §3.2) para justificar as decisões de arquitetura ou código. Segue rigorosamente as decisões tomadas nos ADRs (0001 a 0008) e as regras de Clean Architecture. Se uma questão não estiver coberta, diz explicitamente 'A KB do FlowGuard não aborda este tema' em vez de inventar."*
+> **Metadata:** Version 2.4 | Scope: Personal Project (FlowGuard) | Last updated: October 2026
+>
+> **Suggested System Prompt for Chat:**
+> *"Use this Knowledge Base as the absolute source of truth for the FlowGuard project. When answering, cite the section (e.g., see §3.2) to justify architecture or code decisions. Strictly follow the decisions made in ADRs (0001 to 0008) and the Clean Architecture rules. If a question is not covered, explicitly say 'The FlowGuard KB does not address this topic' instead of inventing."*
 
-> **Nota de atualização (v2.3 — Extensão de Contratos, Persistência Física & Glossário):** Esta edição acrescenta informação sem remover nada do existente. As novas secções **§16 a §27** formalizam a especificação contratual da API REST (`06-api-design-specification.md`, `openapi.yaml`), o mapeamento físico DDD→PostgreSQL (`07-relational-mapping-and-persistence-strategy.md`), o ERD relacional e views CQRS (`08-database-structure.md`) e o Glossário Global de Linguagem Ubíqua (`glossary.md`). As secções §1–§15 permanecem inalteradas.
+> **Update note (v2.3 — Contracts, Physical Persistence & Glossary Extension):** This edition adds information without removing anything from the existing content. The new sections **§16 to §27** formalize the REST API contractual specification (`06-api-design-specification.md`, `openapi.yaml`), the physical DDD→PostgreSQL mapping (`07-relational-mapping-and-persistence-strategy.md`), the relational ERD and CQRS views (`08-database-structure.md`), and the Global Ubiquitous Language Glossary (`glossary.md`). Sections §1–§15 remain unchanged.
 
-> **Nota de atualização (v2.4 — Extensão de Roadmap Detalhado & Infraestrutura de Deployment):** Esta edição acrescenta informação sem remover nada do existente. As novas secções **§28 a §30** formalizam o roadmap detalhado de 28+ horas (`ROADMAP.md`), a configuração de infraestrutura Docker Compose (`docker-compose.yml`) e o version history da própria KB. As secções §1–§27 permanecem 100% inalteradas.
+> **Update note (v2.4 — Detailed Roadmap & Deployment Infrastructure Extension):** This edition adds information without removing anything from the existing content. The new sections **§28 to §30** formalize the detailed 28+ hour roadmap (`ROADMAP.md`), the Docker Compose infrastructure configuration (`docker-compose.yml`), and the version history of the KB itself. Sections §1–§27 remain 100% unchanged.
 
-## Índice
-1. Visão Geral & Contexto de Negócio
+## Index
+1. Overview & Business Context
 2. Stakeholders & Personas
-3. Princípios de Engenharia & Guidelines
-4. Cenários Arquiteturais Chave
-5. Decisões Arquiteturais (ADRs 0001–0008)
-6. Persistência Relacional & Concorrência (PostgreSQL)
-7. API REST, Segurança & Validação
-8. Estratégia de Testes & CI/CD
-9. Roadmap de Desenvolvimento (20+ Horas)
-10. **Modelo de Domínio Detalhado (Estrutura & PlantUML)**
-11. **Rationale do Modelo de Domínio & Decisões Evolutivas**
+3. Engineering Principles & Guidelines
+4. Key Architectural Scenarios
+5. Architectural Decisions (ADRs 0001–0008)
+6. Relational Persistence & Concurrency (PostgreSQL)
+7. REST API, Security & Validation
+8. Testing Strategy & CI/CD
+9. Development Roadmap (20+ Hours)
+10. **Detailed Domain Model (Structure & PlantUML)**
+11. **Domain Model Rationale & Evolutionary Decisions**
 12. **Architecture Summary & Service Breakdown**
 13. **Component Architecture (C4 Level 3)**
 14. **Use Case Diagram & Functional Scope**
@@ -43,248 +43,248 @@
 
 ---
 
-## Notas de Navegação entre Secções
+## Section Navigation Notes
 
-### §1–§15 (Baseline Original — Inalteradas)
-As secções originais da KB v2.2 permanecem **100% inalteradas** e continuam a ser a fonte primária para:
-* **Visão de negócio, stakeholders e personas** (§1, §2).
-* **Princípios de engenharia e guidelines** (§3).
-* **Cenários arquiteturais chave** (§4 — autenticação, integridade topológica, ingestão sliding-window, dedução de stock).
-* **ADRs 0001–0008** (§5 — Modular Monolith, Stack, PostgreSQL, Sliding Window, JWT/Argon2id, REST, Testes, CI/CD).
-* **Persistência relacional e concorrência** (§6 — constraints de ouro, optimistic/pessimistic locking, views CQRS).
-* **API REST, segurança e validação** (§7 — mapeamento de exceções, CORS, mass-assignment defense).
-* **Estratégia de testes e CI/CD** (§8 — 4 camadas Jest/Supertest/Bruno).
-* **Roadmap de 20+ horas** (§9 — Tasks 1–5).
-* **Modelo de Domínio Detalhado** (§10 — PlantUML completo, 5 agregados + Shared Kernel).
-* **Rationale do Modelo de Domínio** (§11 — fronteiras de agregados, decision logs, invariantes de deleção).
-* **Architecture Summary & Service Breakdown** (§12 — pipeline de processamento, matriz de serviços, matriz completa de endpoints REST).
-* **Component Architecture (C4 Level 3)** (§13 — diagrama de componentes Clean Architecture).
-* **Use Case Diagram** (§14 — baseline UC01–UC15 + roadmap UC16–UC20).
-* **System Context & Container Diagrams (C4 Level 1 & 2)** (§15 — diagramas PlantUML).
+### §1–§15 (Original Baseline — Unchanged)
+The original sections of KB v2.2 remain **100% unchanged** and continue to be the primary source for:
+* **Business vision, stakeholders, and personas** (§1, §2).
+* **Engineering principles and guidelines** (§3).
+* **Key architectural scenarios** (§4 — authentication, topological integrity, sliding-window ingestion, stock deduction).
+* **ADRs 0001–0008** (§5 — Modular Monolith, Stack, PostgreSQL, Sliding Window, JWT/Argon2id, REST, Testing, CI/CD).
+* **Relational persistence and concurrency** (§6 — golden constraints, optimistic/pessimistic locking, CQRS views).
+* **REST API, security, and validation** (§7 — exception mapping, CORS, mass-assignment defense).
+* **Testing strategy and CI/CD** (§8 — 4 Jest/Supertest/Bruno layers).
+* **20+ hour roadmap** (§9 — Tasks 1–5).
+* **Detailed Domain Model** (§10 — complete PlantUML, 5 aggregates + Shared Kernel).
+* **Domain Model Rationale** (§11 — aggregate boundaries, decision logs, deletion invariants).
+* **Architecture Summary & Service Breakdown** (§12 — processing pipeline, service matrix, complete REST endpoint matrix).
+* **Component Architecture (C4 Level 3)** (§13 — Clean Architecture component diagram).
+* **Use Case Diagram** (§14 — UC01–UC15 baseline + UC16–UC20 roadmap).
+* **System Context & Container Diagrams (C4 Level 1 & 2)** (§15 — PlantUML diagrams).
 
-### §16–§27 (Extensão v2.3 — Informação Acrescentada)
+### §16–§27 (v2.3 Extension — Information Added)
 
-| Secção | Conteúdo | Documento Fonte |
+| Section | Content | Source Document |
 |---|---|---|
-| **§16** | Contract-First methodology, versionamento `/api/v1`, content negotiation, semântica HTTP e idempotência (Richardson Level 2). | `06-api-design-specification.md` §1–§2 |
-| **§17** | Matriz completa de permissões RBAC por endpoint (Public, OPERATOR, ENGINEER, ADMINISTRATOR) com success/error codes. | `06-api-design-specification.md` §3 |
-| **§18** | Especificações de DTOs (request/response payloads) para todos os módulos `FG-AUTH`, `FG-TOPO`, `FG-SENS`, `FG-INGEST`, `FG-ALERT`, `FG-STOCK`. | `06-api-design-specification.md` §4 |
-| **§19** | Error envelope JSON uniforme + matriz de resolução de HTTP status codes (`200`–`500`) com cenários arquiteturais. | `06-api-design-specification.md` §5 |
+| **§16** | Contract-First methodology, `/api/v1` versioning, content negotiation, HTTP semantics, and idempotency (Richardson Level 2). | `06-api-design-specification.md` §1–§2 |
+| **§17** | Complete RBAC permission matrix by endpoint (Public, OPERATOR, ENGINEER, ADMINISTRATOR) with success/error codes. | `06-api-design-specification.md` §3 |
+| **§18** | DTO specifications (request/response payloads) for all modules `FG-AUTH`, `FG-TOPO`, `FG-SENS`, `FG-INGEST`, `FG-ALERT`, `FG-STOCK`. | `06-api-design-specification.md` §4 |
+| **§19** | Uniform JSON error envelope + HTTP status code resolution matrix (`200`–`500`) with architectural scenarios. | `06-api-design-specification.md` §5 |
 | **§20** | Boundary validation architecture (Joi/Zod pipes, `stripUnknown: true`, fail-fast execution). | `06-api-design-specification.md` §6 |
 | **§21** | Relational mapping strategy (DDD→PostgreSQL): zero ORM contamination, data mappers, dual identity (UUID + business codes), VO flattening, cross-aggregate refs by ID only. | `07-relational-mapping-and-persistence-strategy.md` §1–§2 |
-| **§22** | DDL físico completo por bounded module (`users`, `user_roles`, `plant_sectors`, `conveyor_lines`, `sensor_nodes`, `threshold_rules`, `telemetry_readings`, `anomaly_alerts`, `spare_part_stock`, `spare_part_movements`, `outbox_webhook_events`). | `07-relational-mapping-and-persistence-strategy.md` §3 |
-| **§23** | Concurrency control (ACID multi-table transactions, pessimistic `SELECT FOR UPDATE`, optimistic `version`), seed script determinístico (`003_seed_industrial_baseline.sql`). | `07-relational-mapping-and-persistence-strategy.md` §4 |
-| **§24** | Mermaid ERD relacional + matriz completa de referential integrity & cascade actions (CASCADE / RESTRICT / SET NULL) por FK. | `08-database-structure.md` §2, §4 |
+| **§22** | Complete physical DDL by bounded module (`users`, `user_roles`, `plant_sectors`, `conveyor_lines`, `sensor_nodes`, `threshold_rules`, `telemetry_readings`, `anomaly_alerts`, `spare_part_stock`, `spare_part_movements`, `outbox_webhook_events`). | `07-relational-mapping-and-persistence-strategy.md` §3 |
+| **§23** | Concurrency control (ACID multi-table transactions, pessimistic `SELECT FOR UPDATE`, optimistic `version`), deterministic seed script (`003_seed_industrial_baseline.sql`). | `07-relational-mapping-and-persistence-strategy.md` §4 |
+| **§24** | Mermaid relational ERD + complete referential integrity & cascade actions matrix (CASCADE / RESTRICT / SET NULL) by FK. | `08-database-structure.md` §2, §4 |
 | **§25** | CQRS read views (`v_conveyor_line_health_summary`, `v_sensor_latest_telemetry`) + indexing strategy (functional B-tree, time-series, partial indexes). | `08-database-structure.md` §5–§6 |
-| **§26** | Ubiquitous Language & Architectural Glossary — definições de todos os conceitos de domínio, estatísticos e arquiteturais com referências cruzadas. | `glossary.md` |
+| **§26** | Ubiquitous Language & Architectural Glossary — definitions of all domain, statistical, and architectural concepts with cross-references. | `glossary.md` |
 | **§27** | OpenAPI 3.0.3 contract reference (metadata, servers, tags, security scheme, parameters, schemas summary, executable tooling). | `openapi.yaml` |
 
-### §28–§30 (Extensão v2.4 — Informação Acrescentada)
+### §28–§30 (v2.4 Extension — Information Added)
 
-| Secção | Conteúdo | Documento Fonte |
+| Section | Content | Source Document |
 |---|---|---|
-| **§28** | Detailed Engineering Roadmap & Milestone Breakdown — 5 milestones (28+ horas) com target layers, deliverables granulares e arquitetura de referência: (M1) Moving Median $\tilde{x}_W$ & IQR Outlier Rejection (6.0h); (M2) Optimistic & Pessimistic Concurrency Control (5.0h); (M3) Transactional Outbox & Async Webhook Alert Dispatcher (6.5h); (M4) Exhaustive Boundary Validation & Git-Native Bruno `.yml` Suites (6.0h); (M5) OpenMetrics/Prometheus Telemetry Scraper Endpoint (4.5h). Inclui summary table com total de 28.0h. | `ROADMAP.md` |
-| **§29** | Infrastructure Deployment & Docker Compose Configuration — `postgres:16-alpine` + `backend` (Node.js/NestJS) services, healthchecks (`pg_isready`), volume mounts de migrations (`/docker-entrypoint-initdb.d`), environment variables (`DB_*`, `JWT_SECRET`, `CORS_ALLOWED_ORIGINS`), volume `postgres_data` e network `flowguard-network` (bridge). Inclui boot sequence, comandos operacionais e integração com CI/CD (§29.6). | `docker-compose.yml` |
-| **§30** | Version History & Document Evolution — tabela de versões (v2.2 → v2.3 → v2.4), princípios de evolução aditiva (nunca subtrativa), versionamento semântico, mapa de correspondência KB ↔ ficheiros do repositório, e próximos passos sugeridos (§31–§34 futuros). | Este documento (meta-documentação) |
+| **§28** | Detailed Engineering Roadmap & Milestone Breakdown — 5 milestones (28+ hours) with target layers, granular deliverables, and reference architecture: (M1) Moving Median $\tilde{x}_W$ & IQR Outlier Rejection (6.0h); (M2) Optimistic & Pessimistic Concurrency Control (5.0h); (M3) Transactional Outbox & Async Webhook Alert Dispatcher (6.5h); (M4) Exhaustive Boundary Validation & Git-Native Bruno `.yml` Suites (6.0h); (M5) OpenMetrics/Prometheus Telemetry Scraper Endpoint (4.5h). Includes summary table with a total of 28.0h. | `ROADMAP.md` |
+| **§29** | Infrastructure Deployment & Docker Compose Configuration — `postgres:16-alpine` + `backend` (Node.js/NestJS) services, healthchecks (`pg_isready`), migrations volume mounts (`/docker-entrypoint-initdb.d`), environment variables (`DB_*`, `JWT_SECRET`, `CORS_ALLOWED_ORIGINS`), `postgres_data` volume, and `flowguard-network` network (bridge). Includes boot sequence, operational commands, and CI/CD integration (§29.6). | `docker-compose.yml` |
+| **§30** | Version History & Document Evolution — version table (v2.2 → v2.3 → v2.4), additive evolution principles (never subtractive), semantic versioning, KB ↔ repository file correspondence map, and suggested next steps (future §31–§34). | This document (meta-documentation) |
 
 ---
 
-## Estado Atual da KB
+## Current State of the KB
 
-* **Versão:** 2.4 (Extended)
-* **Secções originais preservadas:** §1–§15 (nenhum conteúdo eliminado)
-* **Secções v2.3 preservadas:** §16–§27 (nenhum conteúdo eliminado)
-* **Secções acrescentadas em v2.4:** §28–§30 (3 novas secções)
-* **Total de secções:** 30
-* **Fontes consolidadas:** 10+ documentos (`knowledge_base_flowguard.md`, `knowledge_base_esoft_eapli_arqsi.md`, `06-api-design-specification.md`, `07-relational-mapping-and-persistence-strategy.md`, `08-database-structure.md`, `glossary.md`, `openapi.yaml`, `ROADMAP.md`, `docker-compose.yml`, + ADRs 0001–0008 referenciados internamente)
-
----
-
-## Princípios de Evolução da KB (Resumo)
-
-1. **Aditivo, nunca subtrativo:** Cada versão acrescenta informação sem remover conteúdo existente. Quando uma secção é refinada (ex: §9 → §28), a versão original permanece acessível e a nova secção é explicitamente marcada como fonte autoritária para o aspeto refinado.
-2. **Rastreabilidade explícita:** Cada nova secção documenta o ficheiro-fonte (`ROADMAP.md`, `docker-compose.yml`, `openapi.yaml`, etc.) e referencia os ADRs e secções da Master KB (`knowledge_base_esoft_eapli_arqsi.md`) que a justificam.
-3. **Versionamento semântico:** Incrementos minor (v2.3 → v2.4) refletem extensões aditivas; incrementos major (v2.x → v3.x) seriam reservados para reestruturações que quebrem compatibilidade de referências cruzadas.
-4. **Fonte de verdade única:** Em caso de conflito entre esta KB e um ficheiro do repositório (ex: `openapi.yaml` divergir de §27), o ficheiro do repositório prevalece — a KB deve ser atualizada para refletir o estado real do código.
+* **Version:** 2.4 (Extended)
+* **Original sections preserved:** §1–§15 (no content removed)
+* **v2.3 sections preserved:** §16–§27 (no content removed)
+* **Sections added in v2.4:** §28–§30 (3 new sections)
+* **Total sections:** 30
+* **Consolidated sources:** 10+ documents (`knowledge_base_flowguard.md`, `knowledge_base_esoft_eapli_arqsi.md`, `06-api-design-specification.md`, `07-relational-mapping-and-persistence-strategy.md`, `08-database-structure.md`, `glossary.md`, `openapi.yaml`, `ROADMAP.md`, `docker-compose.yml`, + ADRs 0001–0008 referenced internally)
 
 ---
 
-## 1. Visão Geral & Contexto de Negócio
+## KB Evolution Principles (Summary)
 
-### 1.1. O Problema Real
-Nas linhas de montagem modernas (fábricas) e centros logísticos de alta capacidade (ex: centros de distribuição LIDL, Sonae), falhas em tapetes transportadores (*conveyor belts*), bloqueios em cruzamentos e sobrecarga de motores causam paragens não planeadas que custam milhares de euros por minuto. Os operadores tradicionais descobrem estas falhas apenas quando a linha já parou fisicamente, através de inspeção visual ou falha catastrófica.
+1. **Additive, never subtractive:** Each version adds information without removing existing content. When a section is refined (e.g., §9 → §28), the original version remains accessible and the new section is explicitly marked as the authoritative source for the refined aspect.
+2. **Explicit traceability:** Each new section documents the source file (`ROADMAP.md`, `docker-compose.yml`, `openapi.yaml`, etc.) and references the ADRs and sections of the Master KB (`knowledge_base_esoft_eapli_arqsi.md`) that justify it.
+3. **Semantic versioning:** Minor increments (v2.3 → v2.4) reflect additive extensions; major increments (v2.x → v3.x) would be reserved for restructurings that break cross-reference compatibility.
+4. **Single source of truth:** In case of conflict between this KB and a repository file (e.g., `openapi.yaml` diverging from §27), the repository file prevails — the KB must be updated to reflect the actual state of the code.
 
-### 1.2. A Solução (FlowGuard)
-O **FlowGuard** é um motor de backend e gateway de telemetria leve e de alto desempenho. Ele resolve a dor da Indústria 4.0 ao:
-* Ingerir fluxos de dados de sensores industriais (velocidade, vibração, temperatura, contadores óticos) em tempo real.
-* Aplicar janelas deslizantes (*sliding windows*) e algoritmos de filtragem estatística **em memória** para calcular médias e medianas móveis.
-* Detetar micro-bloqueios ou sobreaquecimento *antes* da falha física.
-* Persistir o histórico de telemetria e alertas garantindo integridade relacional estrita (ACID).
+---
 
-### 1.3. Diferenciação e Destaques Técnicos
-* **Âmbito Real:** Resolve um problema clássico de logística pesada e automação industrial.
-* **Domínio de Dados:** Uso de *Ring Buffers* (buffers circulares) para janelas deslizantes, evitando sobrecarga de memória.
-* **Clean Architecture:** Isolamento rigoroso entre Domínio (regras de negócio), Aplicação (casos de uso) e Infraestrutura (PostgreSQL, NestJS).
-* **CQRS Leve:** Separação de operações de escrita (Comandos) de leitura otimizada (Queries com SQL Views).
+## 1. Overview & Business Context
+
+### 1.1. The Real Problem
+In modern assembly lines (factories) and high-capacity logistics centers (e.g., LIDL, Sonae distribution centers), failures in conveyor belts, blockages at crossings, and motor overloads cause unplanned stoppages that cost thousands of euros per minute. Traditional operators only discover these failures when the line has already physically stopped, through visual inspection or catastrophic failure.
+
+### 1.2. The Solution (FlowGuard)
+**FlowGuard** is a lightweight, high-performance backend engine and telemetry gateway. It solves the Industry 4.0 pain by:
+* Ingesting industrial sensor data streams (velocity, vibration, temperature, optical counters) in real time.
+* Applying sliding windows and statistical filtering algorithms **in memory** to compute moving averages and medians.
+* Detecting micro-blockages or overheating *before* physical failure.
+* Persisting telemetry and alert history while guaranteeing strict relational integrity (ACID).
+
+### 1.3. Differentiation & Technical Highlights
+* **Real Scope:** Solves a classic heavy logistics and industrial automation problem.
+* **Data Domain:** Use of *Ring Buffers* (circular buffers) for sliding windows, avoiding memory overload.
+* **Clean Architecture:** Rigorous isolation between Domain (business rules), Application (use cases), and Infrastructure (PostgreSQL, NestJS).
+* **Light CQRS:** Separation of write operations (Commands) from optimized reads (Queries with SQL Views).
 
 ---
 
 ## 2. Stakeholders & Personas
 
-O sistema é protegido por Role-Based Access Control (RBAC) e serve três personas principais:
-1. **Plant Operators (`OPERATOR`):** Monitorizam a saúde da linha em tempo real, reconhecem alertas de anomalia ativos e supervisionam o throughput diário.
-2. **Industrial Engineers & Maintenance Managers (`ENGINEER`):** Configuram setores da fábrica, definem topologias de linhas, calibram limiares (*thresholds*) de janelas deslizantes e analisam relatórios históricos de telemetria para agendar manutenção preventiva.
-3. **System Administrators (`ADMINISTRATOR`):** Responsáveis pela governança de segurança, provisionamento de contas, atribuição de roles e manutenção da BD.
-4. **Integradores Automatizados:** Serviços de ML, scrapers OpenMetrics/Prometheus e message brokers (MQTT/RabbitMQ) que consomem as APIs REST padronizadas.
+The system is protected by Role-Based Access Control (RBAC) and serves three main personas:
+1. **Plant Operators (`OPERATOR`):** Monitor line health in real time, acknowledge active anomaly alerts, and supervise daily throughput.
+2. **Industrial Engineers & Maintenance Managers (`ENGINEER`):** Configure factory sectors, define line topologies, calibrate sliding-window *thresholds*, and analyze historical telemetry reports to schedule preventive maintenance.
+3. **System Administrators (`ADMINISTRATOR`):** Responsible for security governance, account provisioning, role assignment, and database maintenance.
+4. **Automated Integrators:** ML services, OpenMetrics/Prometheus scrapers, and message brokers (MQTT/RabbitMQ) that consume the standardized REST APIs.
 
 ---
 
-## 3. Princípios de Engenharia & Guidelines
+## 3. Engineering Principles & Guidelines
 
-O FlowGuard adere aos seguintes princípios (alinhados com a Master KB §1.2 e §10):
-* **Princípio 1 — The Dependency Rule:** Todo o código aponta para dentro. O Domínio (entidades, VOs, Domain Services) não conhece NestJS, PostgreSQL ou HTTP.
-* **Princípio 2 — Database as a Fortress:** O PostgreSQL não é um mero repositório; ele defende os invariantes (ex: `ON DELETE RESTRICT`, `CHECK (stock_units >= 0)`).
-* **Princípio 3 — Intentional APIs:** URIs baseadas em substantivos, métodos HTTP corretos e validação de payload à entrada (Joi/Zod) antes de tocar na camada de aplicação.
-* **Princípio 4 — Testability by Design:** A lógica de negócio e a matemática das janelas deslizantes são testáveis em milissegundos sem BD ou rede.
-* **Princípio 5 — Less is More:** Uso de um Modular Monolith em vez de Microserviços (1.º Mandamento dos Sistemas Distribuídos).
-
----
-
-## 4. Cenários Arquiteturais Chave
-
-### 4.1. Autenticação Segura de Engenheiro e Autorização por Role
-* **Fluxo:** `POST /api/v1/auth/login` envia credenciais. O sistema verifica o hash (Argon2id) e emite um JWT assinado com claims (`sub`, `role`, `exp`). O `RolesGuard` interceta pedidos futuros e verifica se o token tem a role `ENGINEER` antes de permitir aceder a rotas de configuração de topologia.
-
-### 4.2. Integridade Topológica na Eliminação de Ativos
-* **Fluxo:** Um pedido `DELETE /api/v1/plant-sectors/{id}` tenta apagar um setor que tem `ConveyorLines` associadas. A FK do PostgreSQL (`ON DELETE RESTRICT`) bloqueia a operação. A aplicação captura o erro e devolve `409 Conflict` com detalhes dos ativos dependentes, preservando o histórico de auditoria.
-
-### 4.3. Ingestão de Telemetria e Avaliação Estatística (Sliding Window)
-* **Fluxo:** `POST /api/v1/sensor-nodes/{sensorId}/telemetry-readings`. O payload é validado (Joi).
-* O `TelemetryEvaluationEngine` processa o dado em 4 filtros (*Pipes and Filters*):
-  1. *Sanitização:* Valida limites físicos do sensor.
-  2. *Janela Deslizante:* Insere o valor num *Ring Buffer* em memória e calcula a média móvel (\(\mu_W\)) e mediana móvel (\(\tilde{x}_W\)).
-  3. *Avaliação:* Compara a métrica suavizada com o `ThresholdRule` (WARNING/CRITICAL).
-  4. *Ação:* Persiste a leitura e, se houver quebra, gera um `AnomalyAlert` e altera o estado da linha (`RUNNING` -> `FAULT_HALTED`).
-
-### 4.4. Dedução de Stock com Alta Contenção
-* **Fluxo:** Múltiplos pedidos de manutenção deduzem peças de stock ao mesmo tempo. A aplicação abre uma transação e usa **Pessimistic Locking** (`SELECT ... FOR UPDATE`). A entidade valida se o stock não fica negativo. Se for válido, atualiza e faz `COMMIT`; se não, faz `ROLLBACK` e devolve `422 Unprocessable Entity`.
+FlowGuard adheres to the following principles (aligned with Master KB §1.2 and §10):
+* **Principle 1 — The Dependency Rule:** All code points inward. The Domain (entities, VOs, Domain Services) does not know about NestJS, PostgreSQL, or HTTP.
+* **Principle 2 — Database as a Fortress:** PostgreSQL is not a mere repository; it defends invariants (e.g., `ON DELETE RESTRICT`, `CHECK (stock_units >= 0)`).
+* **Principle 3 — Intentional APIs:** Noun-based URIs, correct HTTP methods, and payload validation at the boundary (Joi/Zod) before touching the application layer.
+* **Principle 4 — Testability by Design:** Business logic and sliding-window mathematics are testable in milliseconds without a DB or network.
+* **Principle 5 — Less is More:** Use of a Modular Monolith instead of Microservices (1st Commandment of Distributed Systems).
 
 ---
 
-## 5. Decisões Arquiteturais (ADRs 0001–0008)
+## 4. Key Architectural Scenarios
 
-### ADR-0001: Modular Monolith com Clean / Onion Architecture
-* **Decisão:** O sistema é empacotado como uma única unidade de deploy, mas dividido em módulos verticais (`IdentityAndAccess`, `PlantTopology`, `TelemetryIngestion`, `AnomalyAlerting`, `SparePartsInventory`).
-* **Camadas:** Domain (puro TypeScript) -> Application (Use Cases e Ports) -> Infrastructure & Presentation (Controllers NestJS, Repositórios PostgreSQL).
-* **Justificação:** Elimina latência de rede entre módulos, permite testar o domínio isoladamente e facilita a evolução para microserviços se necessário no futuro.
+### 4.1. Secure Engineer Authentication and Role-Based Authorization
+* **Flow:** `POST /api/v1/auth/login` submits credentials. The system verifies the hash (Argon2id) and issues a signed JWT with claims (`sub`, `role`, `exp`). The `RolesGuard` intercepts future requests and verifies that the token has the `ENGINEER` role before allowing access to topology configuration routes.
 
-### ADR-0002: Stack Tecnológica (Node.js + TypeScript + NestJS)
-* **Decisão:** Node.js (LTS) para I/O não-bloqueante (ideal para telemetria concorrente). TypeScript (Strict Mode) para tipagem estática e DDD. NestJS sobre Express para injeção de dependências (IoC), modularidade e guards/pipes.
-* **Justificação:** Facilita a implementação da Clean Architecture, com testes rápidos e um ecossistema moderno.
+### 4.2. Topological Integrity on Asset Deletion
+* **Flow:** A `DELETE /api/v1/plant-sectors/{id}` request tries to delete a sector that has associated `ConveyorLines`. The PostgreSQL FK (`ON DELETE RESTRICT`) blocks the operation. The application catches the error and returns `409 Conflict` with details of the dependent assets, preserving the audit history.
 
-### ADR-0003: Persistência Relacional (PostgreSQL)
-* **Decisão:** PostgreSQL (v16+) com schema normalizado (3NF/BCNF), constraints nativas (`ON DELETE RESTRICT`, `CHECK`), indexação funcional (case-insensitive) e `JSONB` para metadados semiestruturados.
-* **Concorrência:** Transações ACID, *Pessimistic Locking* (`FOR UPDATE`) para stock e *Optimistic Locking* (coluna `version`) para configurações.
-* **Justificação:** O MongoDB não garante integridade referencial no `DELETE`, sendo vulnerável a race conditions. O PostgreSQL é a "fortaleza" dos invariantes.
+### 4.3. Telemetry Ingestion and Statistical Evaluation (Sliding Window)
+* **Flow:** `POST /api/v1/sensor-nodes/{sensorId}/telemetry-readings`. The payload is validated (Joi).
+* The `TelemetryEvaluationEngine` processes the data through 4 filters (*Pipes and Filters*):
+  1. *Sanitization:* Validates physical sensor limits.
+  2. *Sliding Window:* Inserts the value into an in-memory *Ring Buffer* and computes the moving average (\(\mu_W\)) and moving median (\(\tilde{x}_W\)).
+  3. *Evaluation:* Compares the smoothed metric against the `ThresholdRule` (WARNING/CRITICAL).
+  4. *Action:* Persists the reading and, if a breach occurs, generates an `AnomalyAlert` and changes the line state (`RUNNING` -> `FAULT_HALTED`).
+
+### 4.4. Stock Deduction under High Contention
+* **Flow:** Multiple maintenance requests deduct stock parts simultaneously. The application opens a transaction and uses **Pessimistic Locking** (`SELECT ... FOR UPDATE`). The entity validates that stock does not become negative. If valid, it updates and `COMMIT`s; if not, it `ROLLBACK`s and returns `422 Unprocessable Entity`.
+
+---
+
+## 5. Architectural Decisions (ADRs 0001–0008)
+
+### ADR-0001: Modular Monolith with Clean / Onion Architecture
+* **Decision:** The system is packaged as a single deploy unit but divided into vertical modules (`IdentityAndAccess`, `PlantTopology`, `TelemetryIngestion`, `AnomalyAlerting`, `SparePartsInventory`).
+* **Layers:** Domain (pure TypeScript) -> Application (Use Cases and Ports) -> Infrastructure & Presentation (NestJS Controllers, PostgreSQL Repositories).
+* **Justification:** Eliminates network latency between modules, allows testing the domain in isolation, and facilitates evolution to microservices if needed in the future.
+
+### ADR-0002: Technology Stack (Node.js + TypeScript + NestJS)
+* **Decision:** Node.js (LTS) for non-blocking I/O (ideal for concurrent telemetry). TypeScript (Strict Mode) for static typing and DDD. NestJS over Express for dependency injection (IoC), modularity, and guards/pipes.
+* **Justification:** Facilitates the implementation of Clean Architecture, with fast tests and a modern ecosystem.
+
+### ADR-0003: Relational Persistence (PostgreSQL)
+* **Decision:** PostgreSQL (v16+) with a normalized schema (3NF/BCNF), native constraints (`ON DELETE RESTRICT`, `CHECK`), functional indexing (case-insensitive), and `JSONB` for semi-structured metadata.
+* **Concurrency:** ACID transactions, *Pessimistic Locking* (`FOR UPDATE`) for stock, and *Optimistic Locking* (`version` column) for configurations.
+* **Justification:** MongoDB does not guarantee referential integrity on `DELETE`, being vulnerable to race conditions. PostgreSQL is the "fortress" of invariants.
 
 ### ADR-0004: In-Memory Sliding-Window Telemetry
-* **Decisão:** Processamento de telemetria via *Ring Buffers* (tamanho \(N \le 128\)) mantidos em memória por sensor. O cálculo de médias móveis é instantâneo (\(O(W)\)).
-* **Justificação:** Consultar a BD com `PERCENTILE_CONT` a cada leitura de sensor destruiria a performance (I/O e CPU). O uso de memória é estritamente limitado a \(O(S \times N)\).
+* **Decision:** Telemetry processing via *Ring Buffers* (size \(N \le 128\)) kept in memory per sensor. Moving average calculation is instantaneous (\(O(W)\)).
+* **Justification:** Querying the DB with `PERCENTILE_CONT` on every sensor reading would destroy performance (I/O and CPU). Memory usage is strictly bounded to \(O(S \times N)\).
 
-### ADR-0005: Autenticação Stateless JWT & RBAC
-* **Decisão:** JWT com `expiresIn: 8h` (turno industrial) e hashing de passwords com **Argon2id** (memory-hard e resistente a GPUs).
-* **Regras:** Prevenção de *Mass Assignment* (roles nunca vêm do body), ocultação de `password_hash` nas queries e respostas idênticas no login (`401 Unauthorized`) para evitar enumeração.
+### ADR-0005: Stateless JWT Authentication & RBAC
+* **Decision:** JWT with `expiresIn: 8h` (industrial shift) and password hashing with **Argon2id** (memory-hard and GPU-resistant).
+* **Rules:** Prevention of *Mass Assignment* (roles never come from the body), concealment of `password_hash` in queries and responses, and identical login responses (`401 Unauthorized`) to prevent enumeration.
 
-### ADR-0006: API REST (Level 2 Richardson) & OpenAPI 3.0
-* **Decisão:** URIs plurais, uso rigoroso de métodos HTTP e status codes (`200`, `201`, `400`, `401`, `403`, `404`, `409`, `422`). Validação na fronteira com Joi/Zod. Documentação interativa em `/api/docs`.
+### ADR-0006: REST API (Richardson Level 2) & OpenAPI 3.0
+* **Decision:** Plural URIs, strict use of HTTP methods and status codes (`200`, `201`, `400`, `401`, `403`, `404`, `409`, `422`). Boundary validation with Joi/Zod. Interactive documentation at `/api/docs`.
 
-### ADR-0007: Estratégia de Testes (Jest + Supertest + Bruno API Suites)
-* **Decisão (4 Camadas):** Pirâmide de testes estendida para 4 camadas:
-  1. **Unit Tests (Jest):** Focados no Domínio e no `SlidingWindowEngine`. Rápidos (< 1s), sem I/O, sem mocks.
-  2. **Application Tests (Jest + Test Doubles):** Testam Casos de Uso com *In-Memory Fakes* (ex: `InMemoryDomainRepository`) e *Mocks/Spies*.
-  3. **In-Memory HTTP Integration (Supertest):** Testam o pipeline HTTP completo (Routers, Guards, Controllers, Exception Filters) em memória, sem abrir portas TCP (Evita conflitos e portas ocupadas em CI).
-  4. **Black-Box API & Workflows (Bruno CLI):** Coleções declarativas **`.yml`** (Git-native) que correm contra um servidor real e BD PostgreSQL. Permitem *State Chaining* (ex: extrair JWT dinamicamente, criar setor, criar linha, ingerir telemetria e verificar o alerta). Executadas via GUI (Bruno) ou headless (`bru run`).
-* **Justificação:** Feedback ultra-rápido (F.I.R.S.T.), testes independentes, zero conflitos de portas em CI, e verificação *end-to-end* versionada no Git sem dependências de clouds pagas (como o Postman). O Bruno resolve o problema de diffs ilegíveis de JSON e limites de colaboradores (max 3).
+### ADR-0007: Testing Strategy (Jest + Supertest + Bruno API Suites)
+* **Decision (4 Layers):** Testing pyramid extended to 4 layers:
+  1. **Unit Tests (Jest):** Focused on the Domain and the `SlidingWindowEngine`. Fast (< 1s), no I/O, no mocks.
+  2. **Application Tests (Jest + Test Doubles):** Test Use Cases with *In-Memory Fakes* (e.g., `InMemoryDomainRepository`) and *Mocks/Spies*.
+  3. **In-Memory HTTP Integration (Supertest):** Test the complete HTTP pipeline (Routers, Guards, Controllers, Exception Filters) in memory, without opening TCP ports (avoids conflicts and occupied ports in CI).
+  4. **Black-Box API & Workflows (Bruno CLI):** Declarative **`.yml`** collections (Git-native) that run against a real server and PostgreSQL DB. Enable *State Chaining* (e.g., dynamically extract JWT, create sector, create line, ingest telemetry, and verify the alert). Executed via GUI (Bruno) or headless (`bru run`).
+* **Justification:** Ultra-fast feedback (F.I.R.S.T.), independent tests, zero port conflicts in CI, and *end-to-end* verification versioned in Git without paid cloud dependencies (like Postman). Bruno solves the problem of unreadable JSON diffs and collaborator limits (max 3).
 
-### ADR-0008: CI/CD e API Tooling (GitHub Actions + Bruno)
-* **Decisão:** Bruno para coleções de API Git-native (**`.yml`**). GitHub Actions para correr CI (Lint, Build, Test, Audit) em cada Push/PR.
-* **Justificação:** Bruno é livre de limites de cloud e os seus diffs no Git são legíveis. O CI garante que nenhuma alteração parte o build.
-
----
-
-## 6. Persistência Relacional & Concorrência (PostgreSQL)
-
-* **Schema:** Altamente normalizado.
-* **Constraints de Ouro:**
-  * `CHECK (stock_units >= 0)` para stock.
-  * `CHECK (critical_threshold > warning_threshold)` para regras.
-  * `ON DELETE RESTRICT` para proteger ativos em uso.
-* **Optimistic Locking:** Uso de coluna `version` para evitar *lost updates* em configurações.
-* **Pessimistic Locking:** Uso de `SELECT ... FOR UPDATE` para dedução de stock de peças sob alta concorrência.
-* **Views Otimizadas (CQRS na BD):**
-  * `v_conveyor_line_health_summary`: Agrega estado da linha, número de sensores e alertas ativos.
-  * Evita o problema **N+1 Queries**.
+### ADR-0008: CI/CD and API Tooling (GitHub Actions + Bruno)
+* **Decision:** Bruno for Git-native API collections (**`.yml`**). GitHub Actions to run CI (Lint, Build, Test, Audit) on every Push/PR.
+* **Justification:** Bruno is free of cloud limits and its diffs in Git are readable. CI guarantees that no change breaks the build.
 
 ---
 
-## 7. API REST, Segurança & Validação
+## 6. Relational Persistence & Concurrency (PostgreSQL)
 
-* **Formato de Erros:** JSON consistente com `timestamp`, `status`, `error` e `message` (sem stack traces em produção).
-* **Mapeamento de Exceções:**
-  * `400 Bad Request`: Erro de sintaxe ou validação Joi/Zod.
-  * `401 Unauthorized`: Token inválido/expirado.
-  * `403 Forbidden`: Role insuficiente.
-  * `409 Conflict`: Violação de integridade referencial ou versão otimista.
-  * `422 Unprocessable Entity`: Violação de invariante de domínio (ex: stock negativo).
-* **Segurança:** Uso de CORS com *allowlist* (nunca `*`), JWT via `Authorization: Bearer <token>`, e *stripping* de campos não permitidos nos payloads (para evitar Mass Assignment).
+* **Schema:** Highly normalized.
+* **Golden Constraints:**
+  * `CHECK (stock_units >= 0)` for stock.
+  * `CHECK (critical_threshold > warning_threshold)` for rules.
+  * `ON DELETE RESTRICT` to protect assets in use.
+* **Optimistic Locking:** Use of a `version` column to avoid *lost updates* in configurations.
+* **Pessimistic Locking:** Use of `SELECT ... FOR UPDATE` for spare-part stock deduction under high concurrency.
+* **Optimized Views (CQRS in the DB):**
+  * `v_conveyor_line_health_summary`: Aggregates line state, sensor count, and active alerts.
+  * Avoids the **N+1 Queries** problem.
 
 ---
 
-## 8. Estratégia de Testes & CI/CD
+## 7. REST API, Security & Validation
 
-A estratégia de testes do FlowGuard é dividida em 4 camadas distintas:
+* **Error Format:** Consistent JSON with `timestamp`, `status`, `error`, and `message` (no stack traces in production).
+* **Exception Mapping:**
+  * `400 Bad Request`: Syntax error or Joi/Zod validation error.
+  * `401 Unauthorized`: Invalid/expired token.
+  * `403 Forbidden`: Insufficient role.
+  * `409 Conflict`: Referential integrity violation or optimistic version conflict.
+  * `422 Unprocessable Entity`: Domain invariant violation (e.g., negative stock).
+* **Security:** CORS with an *allowlist* (never `*`), JWT via `Authorization: Bearer <token>`, and *stripping* of disallowed fields in payloads (to avoid Mass Assignment).
 
-1. **Unit Tests (Base - Jest):** Focados no Domínio e no `SlidingWindowEngine`. Executam em milissegundos puramente em memória (V8).
-2. **Application Tests (Middle - Jest + Test Doubles):** Testam os Casos de Uso (Services). Injetam *In-Memory Fake Repositories* para garantir testes rápidos e isolados sem BD.
-3. **Integration Tests (Upper-Middle - Supertest):** Testam o pipeline HTTP completo (Routers, Guards, Controllers, Exception Filters) em memória, sem invocar `app.listen()`. Evita flakiness por portas ocupadas no CI.
-4. **Black-Box API & CLI (Topo - Bruno):** Coleções Git-native (`.bru`) que validam fluxos de trabalho completos (*Stateful Workflows*) contra um servidor real, incluindo *Token Extraction* e *State Chaining* (ex: criar setor -> criar linha -> ingerir telemetria -> verificar alerta). Executado via Bruno GUI ou CLI (`npx @usebruno/cli run`).
+---
+
+## 8. Testing Strategy & CI/CD
+
+The FlowGuard testing strategy is divided into 4 distinct layers:
+
+1. **Unit Tests (Base - Jest):** Focused on the Domain and the `SlidingWindowEngine`. They run in milliseconds purely in memory (V8).
+2. **Application Tests (Middle - Jest + Test Doubles):** Test Use Cases (Services). They inject *In-Memory Fake Repositories* to guarantee fast, isolated tests without a DB.
+3. **Integration Tests (Upper-Middle - Supertest):** Test the complete HTTP pipeline (Routers, Guards, Controllers, Exception Filters) in memory, without invoking `app.listen()`. Avoids flakiness from occupied ports in CI.
+4. **Black-Box API & CLI (Top - Bruno):** Git-native collections (`.bru`) that validate complete workflows (*Stateful Workflows*) against a real server, including *Token Extraction* and *State Chaining* (e.g., create sector -> create line -> ingest telemetry -> verify alert). Executed via Bruno GUI or CLI (`npx @usebruno/cli run`).
 
 * **CI Pipeline (GitHub Actions):**
-  1. `npm ci` (instalação limpa).
-  2. `tsc --noEmit` e ESLint (análise estática).
+  1. `npm ci` (clean install).
+  2. `tsc --noEmit` and ESLint (static analysis).
   3. `npm run build`.
-  4. `npm test -- --coverage` (corre testes unitários e de integração).
-  5. `npm audit` (segurança).
-  6. *(Opcional/QA)*: Execução da suite Bruno CLI contra a BD de teste (se aplicável no futuro).
-* **API Tooling:** Bruno armazena os `.bru` files no repositório, permitindo executar as chamadas e extrair tokens automaticamente (`bru.setEnvVar`). A escolha do Bruno em detrimento do Postman prende-se com a integração Git (ficheiros de texto vs JSON monstruoso) e limites do free-tier (Postman limita a 3 colaboradores).
+  4. `npm test -- --coverage` (runs unit and integration tests).
+  5. `npm audit` (security).
+  6. *(Optional/QA)*: Execution of the Bruno CLI suite against the test DB (if applicable in the future).
+* **API Tooling:** Bruno stores the `.bru` files in the repository, allowing calls to be executed and tokens to be extracted automatically (`bru.setEnvVar`). The choice of Bruno over Postman is due to Git integration (text files vs. monstrous JSON) and free-tier limits (Postman limits to 3 collaborators).
 
 ---
 
-## 9. Roadmap de Desenvolvimento (20+ Horas)
+## 9. Development Roadmap (20+ Hours)
 
-O estado atual (Baseline) é um sistema funcional com Domain Models, Persistência, REST API, Segurança e Testes. As próximas 20+ horas de trabalho (com apoio de IA) focar-se-ão em:
+The current state (Baseline) is a functional system with Domain Models, Persistence, REST API, Security, and Tests. The next 20+ hours of work (with AI support) will focus on:
 
-1. **Task 1 (Sliding Window Avançado):** Implementar filtros de mediana móvel de alta frequência (usando *min-max heaps* ou *order statistic trees*) para rejeitar picos de vibração transitórios.
-2. **Task 2 (Concorrência):** Introduzir *Optimistic Locking* (`version`) em todas as mutações de estado das linhas e *Row-level locking* no stock.
-3. **Task 3 (Alert Engine Dinâmico):** Construir um motor de regras de anomalia que dispara *webhooks* assíncronos para sistemas externos (usando o padrão *Transactional Outbox*).
-4. **Task 4 (Testes de Fronteira):** Expandir os testes de integração e as coleções Bruno (`.bru`) com casos exaustivos de erros (400, 401, 403, 404, 409, 422) e fluxos encadeados de ponta-a-ponta.
-5. **Task 5 (Observabilidade):** Expor um endpoint `/metrics` compatível com OpenMetrics/Prometheus para scraping em tempo real.
+1. **Task 1 (Advanced Sliding Window):** Implement high-frequency moving median filters (using *min-max heaps* or *order statistic trees*) to reject transient vibration spikes.
+2. **Task 2 (Concurrency):** Introduce *Optimistic Locking* (`version`) on all line state mutations and *Row-level locking* on stock.
+3. **Task 3 (Dynamic Alert Engine):** Build an anomaly rules engine that fires asynchronous *webhooks* to external systems (using the *Transactional Outbox* pattern).
+4. **Task 4 (Boundary Tests):** Expand integration tests and Bruno collections (`.bru`) with exhaustive error cases (400, 401, 403, 404, 409, 422) and chained end-to-end flows.
+5. **Task 5 (Observability):** Expose a `/metrics` endpoint compatible with OpenMetrics/Prometheus for real-time scraping.
 
 ---
 
-## 10. Modelo de Domínio Detalhado (Estrutura & PlantUML)
+## 10. Detailed Domain Model (Structure & PlantUML)
 
-O Modelo de Domínio é representado visualmente através de UML e organiza-se em 5 agregados de negócio principais, mais um *Shared Kernel*.
+The Domain Model is visually represented through UML and is organized into 5 main business aggregates, plus a *Shared Kernel*.
 
-### 10.1. Estrutura de Pacotes e Classes
+### 10.1. Package and Class Structure
 * **IDENTITY & ACCESS:** `User` (Root), `UserRole` (Enum), `UserStatus` (Enum).
 * **PLANT TOPOLOGY:** `PlantSector` (Root), `ConveyorLine` (Root), `LineStatus` (Enum).
 * **SENSOR & TELEMETRY:** `SensorNode` (Root), `ThresholdRule` (Entity), `TelemetryReading` (Entity), `SensorType` (Enum).
 * **ANOMALY & ALERTING:** `AnomalyAlert` (Root), `AlertSeverity` (Enum), `AlertStatus` (Enum).
 * **SPARE PARTS INVENTORY:** `SparePartStock` (Root).
-* **SHARED KERNEL:** `PersonName`, `Email`, `PasswordHash`, `SectorCode`, `LineCode`, `Designation`, `SensorSerialNumber`, `TelemetryValue`, `AbstractStockQuantity`, `Timestamp` (todos Value Objects).
+* **SHARED KERNEL:** `PersonName`, `Email`, `PasswordHash`, `SectorCode`, `LineCode`, `Designation`, `SensorSerialNumber`, `TelemetryValue`, `AbstractStockQuantity`, `Timestamp` (all Value Objects).
 
-### 10.2. Código PlantUML de Referência
+### 10.2. PlantUML Reference Code
 ```plantuml
 @startuml flowguard-domain-model
 skinparam backgroundColor white
@@ -560,51 +560,51 @@ endlegend
 
 ---
 
-## 11. Rationale do Modelo de Domínio & Decisões Evolutivas
+## 11. Domain Model Rationale & Evolutionary Decisions
 
 ### 11.1. Aggregate Decomposition and Consistency Boundaries
-O domínio do FlowGuard está organizado em 5 agregados de negócio e um *Shared Kernel*, aderindo estritamente à regra de invariante DDD: *um agregado define uma fronteira dentro da qual os invariantes de negócio são mantidos num estado totalmente consistente (ACID), e entidades externas só podem referenciar a Aggregate Root através do seu identificador de negócio globalmente único*.
+The FlowGuard domain is organized into 5 business aggregates and a *Shared Kernel*, strictly adhering to the DDD invariant rule: *an aggregate defines a boundary within which business invariants are kept in a fully consistent state (ACID), and external entities may only reference the Aggregate Root through its globally unique business identifier*.
 
-| Agregado | Aggregate Root | Responsabilidade de Negócio & Âmbito |
+| Aggregate | Aggregate Root | Business Responsibility & Scope |
 | --- | --- | --- |
-| **Identity & Access Aggregate** | `User` | Credenciais de utilizador, nome pessoal (`PersonName`), estado do ciclo de vida (`ACTIVE`, `DEACTIVATED`, `PENDING_REGISTRATION`), e Role-Based Access Control (`OPERATOR`, `ENGINEER`, `ADMINISTRATOR`). |
-| **Plant Topology Aggregate** | `PlantSector`, `ConveyorLine` | Gestão hierárquica de ativos industriais representando setores físicos da fábrica, segmentos de produção e topologias de tapetes transportadores. |
-| **Sensor & Telemetry Aggregate** | `SensorNode`, `ThresholdRule` | Nós de sensores heterogéneos (velocidade, vibração, temperatura, contadores óticos), metadados de calibração e limites de janelas deslizantes. |
-| **Anomaly & Alerting Aggregate** | `AnomalyAlert` | Quebras de limiares em tempo real, estados de anomalia, ciclos de vida de alertas automatizados e transições de estado operacional das linhas. |
-| **Spare Parts Inventory Aggregate** | `SparePartStock` | Unidades de stock abstratas normalizadas (\(u \in \mathbb{N}_0\)) para componentes de substituição e rastreio de manutenção. |
+| **Identity & Access Aggregate** | `User` | User credentials, personal name (`PersonName`), lifecycle state (`ACTIVE`, `DEACTIVATED`, `PENDING_REGISTRATION`), and Role-Based Access Control (`OPERATOR`, `ENGINEER`, `ADMINISTRATOR`). |
+| **Plant Topology Aggregate** | `PlantSector`, `ConveyorLine` | Hierarchical management of industrial assets representing physical factory sectors, production segments, and conveyor belt topologies. |
+| **Sensor & Telemetry Aggregate** | `SensorNode`, `ThresholdRule` | Heterogeneous sensor nodes (velocity, vibration, temperature, optical counters), calibration metadata, and sliding-window limits. |
+| **Anomaly & Alerting Aggregate** | `AnomalyAlert` | Real-time threshold breaches, anomaly states, automated alert lifecycles, and operational line state transitions. |
+| **Spare Parts Inventory Aggregate** | `SparePartStock` | Normalized abstract stock units (\(u \in \mathbb{N}_0\)) for replacement components and maintenance tracking. |
 
-### 11.2. Log de Decisões Evolutivas (Traceability)
+### 11.2. Evolutionary Decisions Log (Traceability)
 
 **Decision Log 1: User Roles and Staff Onboarding Lifecycle (ADR-0005)**
-* **Contexto:** O sistema requer permissões operacionais distintas para operadores de chão de fábrica, engenheiros de manutenção e administradores. O registo público deve ser restrito, enquanto o onboarding de staff deve seguir um fluxo de convite seguro.
-* **Rationale:** A enumeração `UserRole` define `{OPERATOR, ENGINEER, ADMINISTRATOR}`. A enumeração `UserStatus` define `{ACTIVE, DEACTIVATED, PENDING_REGISTRATION}`. O auto-registo público provisiona contas `OPERATOR` padrão com estado `PENDING_REGISTRATION` até serem completadas por um administrador.
+* **Context:** The system requires distinct operational permissions for factory-floor operators, maintenance engineers, and administrators. Public registration must be restricted, while staff onboarding must follow a secure invitation flow.
+* **Rationale:** The `UserRole` enumeration defines `{OPERATOR, ENGINEER, ADMINISTRATOR}`. The `UserStatus` enumeration defines `{ACTIVE, DEACTIVATED, PENDING_REGISTRATION}`. Public self-registration provisions default `OPERATOR` accounts with `PENDING_REGISTRATION` status until completed by an administrator.
 
 **Decision Log 2: Hierarchical Referential Integrity on Asset Deletion (ADR-0003)**
-* **Contexto:** As topologias industriais formam hierarquias estritas pai-filho (`PlantSector` \(\rightarrow\) `ConveyorLine` \(\rightarrow\) `SensorNode`). A eliminação acidental de ativos pai ativos corromperia os registos de auditoria de telemetria.
-* **Rationale:** Aplicado via chaves estrangeiras relacionais com constraints **`ON DELETE RESTRICT`**. A desativação de ativos deve ser feita via *soft deactivation* (`is_active = FALSE`) em vez de eliminação física.
+* **Context:** Industrial topologies form strict parent-child hierarchies (`PlantSector` \(\rightarrow\) `ConveyorLine` \(\rightarrow\) `SensorNode`). Accidental deletion of active parent assets would corrupt telemetry audit records.
+* **Rationale:** Applied via relational foreign keys with **`ON DELETE RESTRICT`** constraints. Asset deactivation must be done via *soft deactivation* (`is_active = FALSE`) instead of physical deletion.
 
 **Decision Log 3: In-Memory Sliding-Window Telemetry Pipeline (ADR-0004)**
-* **Contexto:** Fluxos de sensores brutos chegam a alta frequência. Avaliar queries históricas à base de dados para médias e medianas móveis a cada pedido de ingestão saturaria o I/O de disco e a CPU.
-* **Rationale:** Encapsulado no *Domain Service* `TelemetryEvaluationEngine`, mantendo *ring buffers* circulares em memória limitada por sensor ativo para calcular estatísticas deslizantes em microssegundos.
+* **Context:** Raw sensor streams arrive at high frequency. Evaluating historical database queries for moving averages and medians on every ingestion request would saturate disk I/O and CPU.
+* **Rationale:** Encapsulated in the *Domain Service* `TelemetryEvaluationEngine`, keeping circular *ring buffers* in memory bounded per active sensor to compute sliding statistics in microseconds.
 
 **Decision Log 4: Non-Negative Abstract Stock Units**
-* **Contexto:** Peças de substituição e inventário de manutenção devem ser rastreados sem sobrecarga de conversão de unidades complexas.
-* **Rationale:** Modelado usando o Value Object `AbstractStockQuantity`, apoiado por pré-condições de domínio e constraints PostgreSQL `CHECK (stock_units >= 0)` para impedir saldos negativos.
+* **Context:** Spare parts and maintenance inventory must be tracked without the overhead of complex unit conversion.
+* **Rationale:** Modeled using the Value Object `AbstractStockQuantity`, supported by domain preconditions and PostgreSQL `CHECK (stock_units >= 0)` constraints to prevent negative balances.
 
 ### 11.3. Referential Integrity and Deletion Invariants
-Para satisfazer as regras de integridade ao nível da base de dados e do domínio, as operações de eliminação impõem constraints de consistência estritas:
-* **Referential Guards:** Ativos mestres (`PlantSector`, `ConveyorLine`) não podem ser removidos se existirem sensores filhos ativos ou registos históricos de telemetria. As queries do repositório impõem verificações de dependência antes da eliminação, devolvendo `409 Conflict` em violações.
-* **Soft Lifecycle Deactivation:** Ativos que já não estão operacionais são marcados como inativos via métodos de domínio (`ConveyorLine.deactivate()`) em vez de serem fisicamente removidos, preservando a correlação histórica de telemetria.
+To satisfy integrity rules at both the database and domain level, deletion operations enforce strict consistency constraints:
+* **Referential Guards:** Master assets (`PlantSector`, `ConveyorLine`) cannot be removed if active child sensors or historical telemetry records exist. Repository queries enforce dependency checks before deletion, returning `409 Conflict` on violations.
+* **Soft Lifecycle Deactivation:** Assets that are no longer operational are marked inactive via domain methods (`ConveyorLine.deactivate()`) instead of being physically removed, preserving historical telemetry correlation.
 
 ---
 
 ## 12. Architecture Summary & Service Breakdown
 
-### 12.1. Pipeline de Processamento
-Cada pedido em **FlowGuard** atravessa um pipeline determinístico de Clean Architecture:
+### 12.1. Processing Pipeline
+Every request in **FlowGuard** traverses a deterministic Clean Architecture pipeline:
 **Client / Sensor Gateway $\rightarrow$ NestJS Routing Perimeter (`JwtAuthGuard`, `RolesGuard`, Joi/Zod Validation Pipe) $\rightarrow$ REST Controller $\rightarrow$ Application Service $\rightarrow$ Pure Domain Model / Sliding-Window Engine $\rightarrow$ Repository Port $\rightarrow$ Native PostgreSQL Pool (`pg`)**.
 
-### 12.2. Serviços e Componentes de Domínio
+### 12.2. Services and Domain Components
 | Service / Domain Component | Layer | Responsibility | Used by |
 |---|---|---|---|
 | `AuthAndUserService` | Application | Verifies user credentials against **Argon2id** hashes, issues stateless JWTs (8h shift expiry), and governs staff onboarding (`PENDING_REGISTRATION` $\rightarrow$ `ACTIVE`). | Authentication, User Provisioning, Role Management |
@@ -617,17 +617,17 @@ Cada pedido em **FlowGuard** atravessa um pipeline determinístico de Clean Arch
 | `SparePartsStockService` | Application | Manages normalized non-negative integer spare-part balances ($u \in \mathbb{N}_0$), executing replenishments and row-locked (`SELECT ... FOR UPDATE`) deductions (`Task 2`). | Maintenance Inventory Management, Stock Adjustments |
 | `LineHealthQueryService` | Application (CQRS Read) | Queries the pre-joined PostgreSQL View `v_conveyor_line_health_summary` to avoid N+1 queries and formats system counters for the OpenMetrics `/api/v1/metrics` endpoint (`Task 5`). | Floor Dashboards, Health Checks, Prometheus Scraping |
 
-### 12.3. Resumo de Funcionalidades
-* **Identity, Authentication & RBAC Governance (`FG-AUTH`):** Autenticação stateless com JWT (8h shift), Argon2id, anti-enumeração, mass-assignment defense, e RBAC (`OPERATOR`, `ENGINEER`, `ADMINISTRATOR`).
-* **Plant Sector & Conveyor Line Topology Management (`FG-TOPO`):** Modelação hierárquica, proteção de eliminação (`ON DELETE RESTRICT`), e desativação/reativação suave.
-* **Sensor Nodes & Threshold Rule Configuration (`FG-SENS`):** Suporte a múltiplos transdutores, limites (Warning/Critical) protegidos por invariantes de domínio e SQL (`CHECK`).
-* **Real-Time Telemetry Ingestion & In-Memory Sliding Window (`FG-INGEST`):** Ring Buffers, sanitização, agregação em janela (Média e Mediana móvel), avaliação e persistência atómica com alertas.
-* **Anomaly Alerting & Operational Acknowledgement (`FG-ALERT`):** Ciclo de vida determinístico (`OPEN` -> `ACKNOWLEDGED` -> `RESOLVED`), com notas de operador e webhooks assíncronos (Outbox).
-* **Abstract Spare-Part Inventory Control (`FG-STOCK`):** Stock abstrato ($u \in \mathbb{N}_0$), deduções seguras com `SELECT ... FOR UPDATE`, e validação contra valores negativos (`422`).
+### 12.3. Feature Summary
+* **Identity, Authentication & RBAC Governance (`FG-AUTH`):** Stateless authentication with JWT (8h shift), Argon2id, anti-enumeration, mass-assignment defense, and RBAC (`OPERATOR`, `ENGINEER`, `ADMINISTRATOR`).
+* **Plant Sector & Conveyor Line Topology Management (`FG-TOPO`):** Hierarchical modeling, deletion protection (`ON DELETE RESTRICT`), and soft deactivation/reactivation.
+* **Sensor Nodes & Threshold Rule Configuration (`FG-SENS`):** Support for multiple transducers, limits (Warning/Critical) protected by domain and SQL invariants (`CHECK`).
+* **Real-Time Telemetry Ingestion & In-Memory Sliding Window (`FG-INGEST`):** Ring Buffers, sanitization, windowed aggregation (Moving Average and Median), evaluation, and atomic persistence with alerts.
+* **Anomaly Alerting & Operational Acknowledgement (`FG-ALERT`):** Deterministic lifecycle (`OPEN` -> `ACKNOWLEDGED` -> `RESOLVED`), with operator notes and asynchronous webhooks (Outbox).
+* **Abstract Spare-Part Inventory Control (`FG-STOCK`):** Abstract stock ($u \in \mathbb{N}_0$), safe deductions with `SELECT ... FOR UPDATE`, and validation against negative values (`422`).
 
-### 12.4. Matriz Completa de Endpoints REST
+### 12.4. Complete REST Endpoints Matrix
 
-**Níveis de Acesso:** `Public`, `Gateway / Engineer`, `Operator+`, `Engineer+`, `Admin`.
+**Access Levels:** `Public`, `Gateway / Engineer`, `Operator+`, `Engineer+`, `Admin`.
 
 #### 12.4.1. Diagnostics, Health & Observability
 | Method | Endpoint | Description | Access | Success | Errors |
@@ -684,16 +684,16 @@ Cada pedido em **FlowGuard** atravessa um pipeline determinístico de Clean Arch
 
 ## 13. Component Architecture (C4 Level 3)
 
-### 13.1. Contexto e Estrutura de Camadas
-O sistema segue o modelo C4 (Nível 3), detalhando a decomposição interna do contentor *Back-End Modular Monolith*.
+### 13.1. Context and Layer Structure
+The system follows the C4 model (Level 3), detailing the internal decomposition of the *Back-End Modular Monolith* container.
 
-**Pipeline de Camadas:**
-1. **Presentation & Delivery Layer (Primary / Driving Adapters):** NestJS Routers, `JwtAuthGuard`, `RolesGuard`, `HttpExceptionFilter`, e validação Joi/Zod (`stripUnknown: true`).
-2. **Application Services Layer:** Serviços orquestradores de casos de uso (ex: `TelemetryIngestionService`, `AnomalyAlertService`), demarcação de transações ACID e coordenação de Ports.
-3. **Domain Core Layer:** Entidades puras TypeScript, Agregados, Value Objects, e Domain Services (`TelemetryEvaluationEngine`, `LineStateTransitionDomainService`).
-4. **Infrastructure & Persistence Layer (Driven Adapters):** Implementações dos Ports (ex: `PgUserRepository`, `PgSensorTelemetryRepository`), Data Mappers e adaptadores de webhook.
+**Layer Pipeline:**
+1. **Presentation & Delivery Layer (Primary / Driving Adapters):** NestJS Routers, `JwtAuthGuard`, `RolesGuard`, `HttpExceptionFilter`, and Joi/Zod validation (`stripUnknown: true`).
+2. **Application Services Layer:** Use case orchestrator services (e.g., `TelemetryIngestionService`, `AnomalyAlertService`), ACID transaction demarcation, and Port coordination.
+3. **Domain Core Layer:** Pure TypeScript entities, Aggregates, Value Objects, and Domain Services (`TelemetryEvaluationEngine`, `LineStateTransitionDomainService`).
+4. **Infrastructure & Persistence Layer (Driven Adapters):** Port implementations (e.g., `PgUserRepository`, `PgSensorTelemetryRepository`), Data Mappers, and webhook adapters.
 
-### 13.2. PlantUML do Diagrama de Componentes
+### 13.2. Component Diagram PlantUML
 ```plantuml
 @startuml
 !pragma layout smetana
@@ -876,21 +876,21 @@ A_Webhook ..> WebhookReceiver : HTTPS POST (JSON)
 
 ## 14. Use Case Diagram & Functional Scope
 
-O âmbito funcional está dividido entre o *Baseline* (implementado) e o *Roadmap* (20+ horas futuras).
+The functional scope is divided between the *Baseline* (implemented) and the *Roadmap* (20+ future hours).
 
-### 14.1. Casos de Uso (Baseline)
-* **Identity & Access Governance:** `UC01` (Autenticar/Login), `UC02` (Provisionar Staff/RBAC), `UC03` (Gerir Estado de Utilizador).
-* **Plant Topology & Sensor Configuration:** `UC04` (Gerir Setores), `UC05` (Gerir Linhas), `UC06` (Registar/Calibrar Sensores), `UC07` (Configurar Thresholds), `UC08` (Gerir Stock Abstrato).
-* **Real-Time Telemetry & Floor Operations:** `UC09` (Ingerir Telemetria), `UC10` (Calcular Média Móvel), `UC11` (Gerar Alerta e Mudar Estado da Linha), `UC12` (Consultar Saúde da Linha - CQRS), `UC13` (Inspecionar Alertas), `UC14` (Reconhecer/Resolver Alerta), `UC15` (Atualizar Estado Operacional).
+### 14.1. Use Cases (Baseline)
+* **Identity & Access Governance:** `UC01` (Authenticate/Login), `UC02` (Provision Staff/RBAC), `UC03` (Manage User Status).
+* **Plant Topology & Sensor Configuration:** `UC04` (Manage Sectors), `UC05` (Manage Lines), `UC06` (Register/Calibrate Sensors), `UC07` (Configure Thresholds), `UC08` (Manage Abstract Stock).
+* **Real-Time Telemetry & Floor Operations:** `UC09` (Ingest Telemetry), `UC10` (Compute Moving Average), `UC11` (Generate Alert and Change Line State), `UC12` (Query Line Health - CQRS), `UC13` (Inspect Alerts), `UC14` (Acknowledge/Resolve Alert), `UC15` (Update Operational Status).
 
-### 14.2. Casos de Uso (Roadmap)
-* `UC16` (Mediana Móvel e Filtro IQR - Task 1)
-* `UC17` (Optimistic Lock e Row-Level Locking - Task 2)
-* `UC18` (Webhooks Assíncronos Outbox - Task 3)
-* `UC19` (Executar Suites Bruno CLI - Task 4)
-* `UC20` (Scraping OpenMetrics/Prometheus - Task 5)
+### 14.2. Use Cases (Roadmap)
+* `UC16` (Moving Median and IQR Filter - Task 1)
+* `UC17` (Optimistic Lock and Row-Level Locking - Task 2)
+* `UC18` (Asynchronous Outbox Webhooks - Task 3)
+* `UC19` (Run Bruno CLI Suites - Task 4)
+* `UC20` (OpenMetrics/Prometheus Scraping - Task 5)
 
-### 14.3. Diagrama de Casos de Uso (Mermaid)
+### 14.3. Use Case Diagram (Mermaid)
 ```mermaid
 flowchart LR
 
@@ -1138,37 +1138,37 @@ BackEnd --> DB : [TCP / SQL Connection Pool]\nReads and writes via native Postgr
 ## 16. API Design Specification & Contract-First Methodology
 
 ### 16.1. Contract-First Methodology & Authoritative Source
-Em alinhamento estrito com **ADR-0006** (RESTful API Design, Intentional Resource Modeling, Boundary Validation & OpenAPI 3.0) e com os princípios de REST de Roy Fielding (KB §8.2, §8.3), o contrato HTTP do FlowGuard é regido por três invariantes:
+In strict alignment with **ADR-0006** (RESTful API Design, Intentional Resource Modeling, Boundary Validation & OpenAPI 3.0) and with Roy Fielding's REST principles (KB §8.2, §8.3), the FlowGuard HTTP contract is governed by three invariants:
 
-1. **Authoritative OpenAPI 3.0.3 Baseline:** O ficheiro `docs/api/openapi.yaml` é a **fonte de verdade única** para todos os endpoints, esquemas de request/response e esquemas de segurança. Qualquer alteração de contrato exige atualização sincronizada do OpenAPI antes de tocar no código (`ADR-0006`).
-2. **Intentional / Task-Based Resource Modeling (CQRS Alignment):** Além do CRUD tradicional, mutações de estado que carregam intenção de domínio específica — reconhecer um alerta, transitar uma linha para manutenção, consumir unidades discretas de stock — são expostas como **sub-recursos intencionais e reveladores de intenção** (`POST /anomaly-alerts/{id}/acknowledge`, `PATCH /conveyor-lines/{id}/operational-status`, `POST /spare-parts/{id}/consume`), em vez de `PUT /alerts/{id}` genéricos (KB §7.5, §8.2).
-3. **Four-Tier Automated Contract Verification:** Todos os contratos, fronteiras de validação e códigos de estado (`200`, `201`, `204`, `400`, `401`, `403`, `404`, `409`, `422`) são verificados automaticamente via **Supertest** (integração in-memory) e coleções Git-native **Bruno (`.bru`)** (black-box end-to-end), conforme `ADR-0007` e `ADR-0008`.
+1. **Authoritative OpenAPI 3.0.3 Baseline:** The `docs/api/openapi.yaml` file is the **single source of truth** for all endpoints, request/response schemas, and security schemes. Any contract change requires synchronized updating of the OpenAPI before touching the code (`ADR-0006`).
+2. **Intentional / Task-Based Resource Modeling (CQRS Alignment):** In addition to traditional CRUD, state mutations that carry specific domain intent — acknowledging an alert, transitioning a line to maintenance, consuming discrete stock units — are exposed as **intentional, intent-revealing sub-resources** (`POST /anomaly-alerts/{id}/acknowledge`, `PATCH /conveyor-lines/{id}/operational-status`, `POST /spare-parts/{id}/consume`), instead of generic `PUT /alerts/{id}` (KB §7.5, §8.2).
+3. **Four-Tier Automated Contract Verification:** All contracts, validation boundaries, and status codes (`200`, `201`, `204`, `400`, `401`, `403`, `404`, `409`, `422`) are automatically verified via **Supertest** (in-memory integration) and Git-native **Bruno (`.bru`)** collections (black-box end-to-end), per `ADR-0007` and `ADR-0008`.
 
-### 16.2. Protocolo, Versionamento & Content Negotiation
-* **Base Path:** `/api/v1` (versionamento explícito no path, preservando compatibilidade retroativa para gateways industriais de bordo).
-* **Transporte:** HTTPS obrigatório em staging/produção; HTTP permitido exclusivamente em desenvolvimento local e em runners de CI.
-* **Content Negotiation:** Bodies JSON com `application/json; charset=utf-8` (KB §8.2 Princípio 3). O endpoint `/api/v1/metrics` (Roadmap Task 5) negocía `text/plain; version=0.0.4; charset=utf-8` em conformidade com a especificação OpenMetrics/Prometheus exposition.
+### 16.2. Protocol, Versioning & Content Negotiation
+* **Base Path:** `/api/v1` (explicit versioning in the path, preserving backward compatibility for on-board industrial gateways).
+* **Transport:** HTTPS mandatory in staging/production; HTTP allowed exclusively in local development and CI runners.
+* **Content Negotiation:** JSON bodies with `application/json; charset=utf-8` (KB §8.2 Principle 3). The `/api/v1/metrics` endpoint (Roadmap Task 5) negotiates `text/plain; version=0.0.4; charset=utf-8` in compliance with the OpenMetrics/Prometheus exposition specification.
 * **Casing & Naming Standards:**
-  * **URI Resource Paths:** substantivos plurais em lowercase `kebab-case` (`/plant-sectors`, `/conveyor-lines`, `/sensor-nodes`, `/anomaly-alerts`, `/spare-parts`). Nomes de verbos CRUD em URIs (`/getLines`, `/deleteSector`) são **estritamente proibidos** (KB §8.2 Princípio 1).
+  * **URI Resource Paths:** plural nouns in lowercase `kebab-case` (`/plant-sectors`, `/conveyor-lines`, `/sensor-nodes`, `/anomaly-alerts`, `/spare-parts`). CRUD verb names in URIs (`/getLines`, `/deleteSector`) are **strictly forbidden** (KB §8.2 Principle 1).
   * **JSON Payload Properties (DTOs):** `camelCase` (`sectorCode`, `warningLimit`, `movingAverage`, `stockUnits`).
   * **Domain Enumerations:** `UPPER_SNAKE_CASE` (`MOTOR_VIBRATION`, `DEGRADED_WARNING`, `FAULT_HALTED`, `ACKNOWLEDGED`).
 
-### 16.3. Semântica dos Métodos HTTP & Idempotência (Richardson Maturity Level 2)
-Conforme KB §8.2 (Princípio 2) e §8.3:
+### 16.3. HTTP Method Semantics & Idempotency (Richardson Maturity Level 2)
+Per KB §8.2 (Principle 2) and §8.3:
 
-| Método HTTP | Semântica em FlowGuard | Safe? | Idempotente? |
+| HTTP Method | Semantics in FlowGuard | Safe? | Idempotent? |
 |---|---|---|---|
-| **`GET`** | Recupera representações de recursos ou coleções paginadas/filtradas. Nunca muta estado. | **Sim** | **Sim** |
-| **`POST`** | Cria um recurso subordinado numa coleção (`201 Created` + `Location`) ou dispara um comando de domínio atómico (telemetria, acknowledge, replenish/consume) — `200 OK`/`201 Created`. | Não | **Não** |
-| **`PUT`** | Substitui a totalidade de uma configuração mutável (`UpdatePlantSector`, `UpsertThresholdRule`). | Não | **Sim** |
-| **`PATCH`** | Executa transições de estado intencionais e delimitadas (`/operational-status`, `/users/{id}/status`, `/sensor-nodes/{id}/deactivate`). | Não | Não |
-| **`DELETE`** | Remoção física de master record sem referências (`204 No Content`); bloqueado por `ON DELETE RESTRICT` se referenciado (`409 Conflict`). | Não | **Sim** |
+| **`GET`** | Retrieves resource representations or paginated/filtered collections. Never mutates state. | **Yes** | **Yes** |
+| **`POST`** | Creates a subordinate resource in a collection (`201 Created` + `Location`) or fires an atomic domain command (telemetry, acknowledge, replenish/consume) — `200 OK`/`201 Created`. | No | **No** |
+| **`PUT`** | Replaces the entirety of a mutable configuration (`UpdatePlantSector`, `UpsertThresholdRule`). | No | **Yes** |
+| **`PATCH`** | Executes intentional and bounded state transitions (`/operational-status`, `/users/{id}/status`, `/sensor-nodes/{id}/deactivate`). | No | No |
+| **`DELETE`** | Physical removal of a master record without references (`204 No Content`); blocked by `ON DELETE RESTRICT` if referenced (`409 Conflict`). | No | **Yes** |
 
 ---
 
 ## 17. RBAC Endpoint Permissions Matrix (Complete)
 
-Conforme **ADR-0005**, o FlowGuard impõe três roles (`OPERATOR`, `ENGINEER`, `ADMINISTRATOR`) validadas via claims JWT stateless (`Authorization: Bearer <token>`) e verificação de conta ativa (`UserStatus.ACTIVE`).
+Per **ADR-0005**, FlowGuard enforces three roles (`OPERATOR`, `ENGINEER`, `ADMINISTRATOR`) validated via stateless JWT claims (`Authorization: Bearer <token>`) and active account verification (`UserStatus.ACTIVE`).
 
 | Capability / Scope | Method | Resource URI | Permitted Roles | Success | Error Codes |
 |---|---|---|---|---|---|
@@ -1194,7 +1194,7 @@ Conforme **ADR-0005**, o FlowGuard impõe três roles (`OPERATOR`, `ENGINEER`, `
 | **FG-SENS** | `POST` | `/api/v1/sensor-nodes` | `ENGINEER`, `ADMINISTRATOR` | `201 Created` | `400`, `401`, `403`, `404`, `409` |
 | **FG-SENS** | `PUT` | `/api/v1/sensor-nodes/{id}/threshold-rule` | `ENGINEER`, `ADMINISTRATOR` | `200 OK` | `400`, `401`, `403`, `404`, `422` |
 | **FG-SENS** | `PATCH` | `/api/v1/sensor-nodes/{id}/deactivate` | `ENGINEER`, `ADMINISTRATOR` | `200 OK` | `401`, `403`, `404` |
-| **FG-INGEST (Task 1)** | `POST` | `/api/v1/sensor-nodes/{id}/telemetry-readings` | `ENGINEER`, `ADMINISTRATOR` (ou Gateway Token) | `201 Created` | `400`, `401`, `403`, `404`, `422` |
+| **FG-INGEST (Task 1)** | `POST` | `/api/v1/sensor-nodes/{id}/telemetry-readings` | `ENGINEER`, `ADMINISTRATOR` (or Gateway Token) | `201 Created` | `400`, `401`, `403`, `404`, `422` |
 | **FG-INGEST** | `GET` | `/api/v1/sensor-nodes/{id}/telemetry-readings?page=1&pageSize=50` | `OPERATOR`, `ENGINEER`, `ADMINISTRATOR` | `200 OK` | `400`, `401`, `404` |
 | **FG-ALERT** | `GET` | `/api/v1/anomaly-alerts?status=OPEN&severity=CRITICAL` | `OPERATOR`, `ENGINEER`, `ADMINISTRATOR` | `200 OK` | `400`, `401` |
 | **FG-ALERT** | `POST` | `/api/v1/anomaly-alerts/{id}/acknowledge` | `OPERATOR`, `ENGINEER`, `ADMINISTRATOR` | `200 OK` | `400`, `401`, `404`, `409`, `422` |
@@ -1235,7 +1235,7 @@ Conforme **ADR-0005**, o FlowGuard impõe três roles (`OPERATOR`, `ENGINEER`, `
 }
 ```
 
-**`PublicRegisterRequestDTO`** (`POST /api/v1/auth/register`): `{ firstName, lastName, email, password }` → cria conta `OPERATOR` em `PENDING_REGISTRATION`.
+**`PublicRegisterRequestDTO`** (`POST /api/v1/auth/register`): `{ firstName, lastName, email, password }` → creates an `OPERATOR` account in `PENDING_REGISTRATION`.
 
 **`CreateUserRequestDTO`** (`POST /api/v1/users`, Admin): `{ firstName, lastName, email, password, roles: [OPERATOR|ENGINEER|ADMINISTRATOR] }`.
 
@@ -1254,7 +1254,7 @@ Conforme **ADR-0005**, o FlowGuard impõe três roles (`OPERATOR`, `ENGINEER`, `
 }
 ```
 
-**`UpdateLineOperationalStatusRequestDTO`** (`PATCH /conveyor-lines/{id}/operational-status`): inclui `expectedVersion` para Optimistic Concurrency Control (`ADR-0003`, Roadmap Task 2). Se outro engenheiro ou uma transição automática por falha modificou a linha em paralelo, o endpoint rejeita o write stale com HTTP `409 Conflict`.
+**`UpdateLineOperationalStatusRequestDTO`** (`PATCH /conveyor-lines/{id}/operational-status`): includes `expectedVersion` for Optimistic Concurrency Control (`ADR-0003`, Roadmap Task 2). If another engineer or an automatic failure transition modified the line in parallel, the endpoint rejects the stale write with HTTP `409 Conflict`.
 ```json
 {
   "operationalStatus": "MAINTENANCE",
@@ -1283,7 +1283,7 @@ Conforme **ADR-0005**, o FlowGuard impõe três roles (`OPERATOR`, `ENGINEER`, `
 
 ### 18.3. Sensor Node & Threshold Rule DTOs (`FG-SENS`)
 
-**`UpsertThresholdRuleRequestDTO`** (`PUT /sensor-nodes/{id}/threshold-rule`): impõe o invariante de domínio e SQL `criticalLimit > warningLimit`. Violação → HTTP `422 Unprocessable Entity`.
+**`UpsertThresholdRuleRequestDTO`** (`PUT /sensor-nodes/{id}/threshold-rule`): enforces the domain and SQL invariant `criticalLimit > warningLimit`. Violation → HTTP `422 Unprocessable Entity`.
 ```json
 {
   "warningLimit": 4.5,
@@ -1306,7 +1306,7 @@ Conforme **ADR-0005**, o FlowGuard impõe três roles (`OPERATOR`, `ENGINEER`, `
 }
 ```
 
-**`TelemetryIngestionEvaluationResponseDTO`** (`201 Created`): devolve a reading persistida, enriquecida com as estatísticas de sliding window in-memory ($\mu_W$, $\tilde{x}_W$) e quaisquer `AnomalyAlert` ou transições de estado `ConveyorLine` desencadeadas (`ADR-0004`).
+**`TelemetryIngestionEvaluationResponseDTO`** (`201 Created`): returns the persisted reading, enriched with the in-memory sliding-window statistics ($\mu_W$, $\tilde{x}_W$) and any `AnomalyAlert` or `ConveyorLine` state transitions triggered (`ADR-0004`).
 ```json
 {
   "reading": {
@@ -1338,7 +1338,7 @@ Conforme **ADR-0005**, o FlowGuard impõe três roles (`OPERATOR`, `ENGINEER`, `
 }
 ```
 
-**`StockAdjustmentRequestDTO`** (`POST /spare-parts/{id}/consume` ou `/replenish`):
+**`StockAdjustmentRequestDTO`** (`POST /spare-parts/{id}/consume` or `/replenish`):
 ```json
 {
   "units": 2,
@@ -1363,7 +1363,7 @@ Conforme **ADR-0005**, o FlowGuard impõe três roles (`OPERATOR`, `ENGINEER`, `
 
 ## 19. Standardized Error Envelope & HTTP Status Code Resolution Matrix
 
-Quando um pedido falha validação, autenticação, autorização, checks referenciais ou invariantes de domínio, o `HttpExceptionFilter` global devolve um envelope JSON uniforme e RFC-compliant (stack traces nunca expostas em produção, KB §9.2, §16.1):
+When a request fails validation, authentication, authorization, referential checks, or domain invariants, the global `HttpExceptionFilter` returns a uniform, RFC-compliant JSON envelope (stack traces never exposed in production, KB §9.2, §16.1):
 
 ```json
 {
@@ -1380,59 +1380,59 @@ Quando um pedido falha validação, autenticação, autorização, checks refere
 
 | Status Code | RFC Semantics | Architectural Scenario in FlowGuard |
 |---|---|---|
-| **`200 OK`** | Success | `GET` seguro, acknowledge/resolve de alerta, ou atualização de stock balance. |
-| **`201 Created`** | Resource Created | Criação de user, plant sector, conveyor line, sensor node, spare part ou telemetry reading. |
-| **`204 No Content`** | Empty Success | `DELETE` de sector ou linha sem referências. |
-| **`400 Bad Request`** | Syntax / Validation Error | Falha de validação Joi/Zod no perímetro (UUID malformado, campo obrigatório ausente, stock não-inteiro). |
-| **`401 Unauthorized`** | Unauthenticated | Bearer JWT ausente/malformado/expirado, ou credenciais de login inválidas (mensagem idêntica para anti-enumeração, `ADR-0005`). |
-| **`403 Forbidden`** | Unauthorized Role / Status | JWT válido mas role RBAC insuficiente (ex: `OPERATOR` em `DELETE /plant-sectors`) ou conta `DEACTIVATED`. |
-| **`404 Not Found`** | Resource Not Found | UUID ou business code (`sectorCode`, `lineCode`, `serialNumber`) alvo não existe. |
-| **`409 Conflict`** | State / Referential Conflict | Duplicação de business code (`sectorCode`, `email`), violação `ON DELETE RESTRICT`, transição de estado de alerta inválida, ou mismatch de `version` otimista. |
-| **`422 Unprocessable Entity`** | Domain Invariant Breach | Violação semântica: `criticalLimit <= warningLimit`, velocidade de tapete negativa, telemetria para sensor `DEACTIVATED`, ou dedução de stock excedendo `stockUnits`. |
-| **`500 Internal Server Error`** | Unhandled Server Fault | Falha de infraestrutura inesperada; mensagem genérica sanitizada. |
+| **`200 OK`** | Success | Safe `GET`, alert acknowledge/resolve, or stock balance update. |
+| **`201 Created`** | Resource Created | Creation of user, plant sector, conveyor line, sensor node, spare part, or telemetry reading. |
+| **`204 No Content`** | Empty Success | `DELETE` of sector or line without references. |
+| **`400 Bad Request`** | Syntax / Validation Error | Joi/Zod validation failure at the perimeter (malformed UUID, missing required field, non-integer stock). |
+| **`401 Unauthorized`** | Unauthenticated | Missing/malformed/expired Bearer JWT, or invalid login credentials (identical message for anti-enumeration, `ADR-0005`). |
+| **`403 Forbidden`** | Unauthorized Role / Status | Valid JWT but insufficient RBAC role (e.g., `OPERATOR` on `DELETE /plant-sectors`) or `DEACTIVATED` account. |
+| **`404 Not Found`** | Resource Not Found | Target UUID or business code (`sectorCode`, `lineCode`, `serialNumber`) does not exist. |
+| **`409 Conflict`** | State / Referential Conflict | Duplicate business code (`sectorCode`, `email`), `ON DELETE RESTRICT` violation, invalid alert state transition, or optimistic `version` mismatch. |
+| **`422 Unprocessable Entity`** | Domain Invariant Breach | Semantic violation: `criticalLimit <= warningLimit`, negative belt velocity, telemetry for `DEACTIVATED` sensor, or stock deduction exceeding `stockUnits`. |
+| **`500 Internal Server Error`** | Unhandled Server Fault | Unexpected infrastructure failure; sanitized generic message. |
 
 ---
 
 ## 20. Input Boundary Validation Architecture (Joi / Zod Pipes)
 
-Conforme KB §9.2 e **ADR-0005 / ADR-0006**, os controllers nunca confiam em `req.body`, `req.query` ou `req.params` brutos:
+Per KB §9.2 and **ADR-0005 / ADR-0006**, controllers never trust raw `req.body`, `req.query`, or `req.params`:
 
-1. **Strict Schema Enforcement:** Cada rota anexa um schema declarativo de validação verificando tipos primitivos, bounds de strings, formatos UUID e paginação inteira positiva (`page >= 1`, `1 <= pageSize <= 100`).
-2. **Mass-Assignment Protection (`stripUnknown: true`):** Campos não reconhecidos — como um cliente a tentar injetar `"roles": ["ADMINISTRATOR"]` ou `"status": "ACTIVE"` em `/api/v1/auth/register` — são removidos ou rejeitados no perímetro antes de chegar ao controller.
-3. **Fail-Fast Execution:** Pedidos inválidos curto-circuitam imediatamente com HTTP `400 Bad Request`, consumindo zero conexões de BD ou ciclos de CPU de domínio.
+1. **Strict Schema Enforcement:** Each route attaches a declarative validation schema verifying primitive types, string bounds, UUID formats, and positive integer pagination (`page >= 1`, `1 <= pageSize <= 100`).
+2. **Mass-Assignment Protection (`stripUnknown: true`):** Unrecognized fields — such as a client attempting to inject `"roles": ["ADMINISTRATOR"]` or `"status": "ACTIVE"` into `/api/v1/auth/register` — are stripped or rejected at the perimeter before reaching the controller.
+3. **Fail-Fast Execution:** Invalid requests short-circuit immediately with HTTP `400 Bad Request`, consuming zero DB connections or domain CPU cycles.
 
 ---
 
 ## 21. Relational Mapping & Persistence Strategy (DDD → PostgreSQL)
 
-### 21.1. Regras Fundamentais (ADR-0001, ADR-0002, ADR-0003)
-A arquitetura de persistência do FlowGuard impõe quatro regras de engenharia fundacionais:
+### 21.1. Fundamental Rules (ADR-0001, ADR-0002, ADR-0003)
+The FlowGuard persistence architecture enforces four foundational engineering rules:
 
-1. **Zero ORM Contamination in the Domain Ring:** Entidades, aggregate roots e value objects escritos em 100% TypeScript puro com zero decorators de persistência (`@Entity`, `@Column`) ou imports de driver (`ADR-0001`).
-2. **Native Connection Pool (`pg`) & Explicit Bidirectional Data Mappers:** Repositórios executam SQL parametrizado (`$1, $2`) sobre um pool gerido `pg.Pool`. Classes Data Mapper dedicadas (Pure Fabrication, KB §4.1, §7.4) traduzem entre Aggregates encapsulados e linhas relacionais flat via `toDomain(row)` (reconstitute) e `toPersistence(aggregate)`.
-3. **Database as a Fortress for Domain Invariants:** Todos os invariantes estruturais — bloqueios de deleção hierárquica (`ON DELETE RESTRICT`), balances não-negativos (`CHECK (stock_units >= 0)`), ordenação de thresholds (`CHECK (critical_limit > warning_limit)`) — são impostos nativamente pelo motor PostgreSQL (`ADR-0003`, KB §21.1).
-4. **Evolutionary Continuity (Baseline → 20+ Hour Roadmap):** O schema suporta baseline implementado e enhancements agendados (colunas `version` de optimistic concurrency, `SELECT ... FOR UPDATE` pessimista, tabela `outbox_webhook_events` para entrega assíncrona de webhooks).
+1. **Zero ORM Contamination in the Domain Ring:** Entities, aggregate roots, and value objects written in 100% pure TypeScript with zero persistence decorators (`@Entity`, `@Column`) or driver imports (`ADR-0001`).
+2. **Native Connection Pool (`pg`) & Explicit Bidirectional Data Mappers:** Repositories execute parameterized SQL (`$1, $2`) over a managed `pg.Pool`. Dedicated Data Mapper classes (Pure Fabrication, KB §4.1, §7.4) translate between encapsulated Aggregates and flat relational rows via `toDomain(row)` (reconstitute) and `toPersistence(aggregate)`.
+3. **Database as a Fortress for Domain Invariants:** All structural invariants — hierarchical deletion blocks (`ON DELETE RESTRICT`), non-negative balances (`CHECK (stock_units >= 0)`), threshold ordering (`CHECK (critical_limit > warning_limit)`) — are enforced natively by the PostgreSQL engine (`ADR-0003`, KB §21.1).
+4. **Evolutionary Continuity (Baseline → 20+ Hour Roadmap):** The schema supports the implemented baseline and scheduled enhancements (`version` columns for optimistic concurrency, pessimistic `SELECT ... FOR UPDATE`, `outbox_webhook_events` table for asynchronous webhook delivery).
 
 ### 21.2. Dual Identity Strategy: Surrogate UUID + Natural Business Codes
-* **Technical Surrogate Key (`id UUID PRIMARY KEY`):** Toda Aggregate Root e tabela de entidade interna usa UUID RFC 4122 (`gen_random_uuid()` / `crypto.randomUUID()`) como PK relacional imutável e alvo de FKs.
-* **Domain Business Code (`sector_code`, `line_code`, `serial_number`, `part_code`):** Identificadores industriais legíveis encapsulados como Value Objects (`SectorCode`, `LineCode`, `SensorSerialNumber`, `PartCode`) mapeados para `VARCHAR(30–40) NOT NULL` protegidos por **case-insensitive functional unique indexes** (`CREATE UNIQUE INDEX ... ON ... (UPPER(code))`). Isto previne duplicados diferindo só em casing (`line-01` vs. `LINE-01`) mesmo sob writes concorrentes.
+* **Technical Surrogate Key (`id UUID PRIMARY KEY`):** Every Aggregate Root and internal entity table uses RFC 4122 UUID (`gen_random_uuid()` / `crypto.randomUUID()`) as the immutable relational PK and FK target.
+* **Domain Business Code (`sector_code`, `line_code`, `serial_number`, `part_code`):** Human-readable industrial identifiers encapsulated as Value Objects (`SectorCode`, `LineCode`, `SensorSerialNumber`, `PartCode`) mapped to `VARCHAR(30–40) NOT NULL` protected by **case-insensitive functional unique indexes** (`CREATE UNIQUE INDEX ... ON ... (UPPER(code))`). This prevents duplicates differing only in casing (`line-01` vs. `LINE-01`) even under concurrent writes.
 
 ### 21.3. Value Objects Mapping (Flattening & Collection Strategies)
-VOs não têm identidade própria (KB §3.2, §13.1) e são persistidos em três padrões determinísticos:
+VOs have no identity of their own (KB §3.2, §13.1) and are persisted using three deterministic patterns:
 
-1. **Single-Column Primitive Flattening:** VOs de atributo único (`Email`, `PasswordHash`, `Designation`, `SectorCode`, `LineCode`, `SensorSerialNumber`, `AbstractStockQuantity`) → colunas tipadas na tabela do agregado (`email VARCHAR(255)`, `stock_units INTEGER`).
-2. **Multi-Column Prefixed Flattening:** VOs compostos (`PersonName`, `TelemetryValue`) → colunas prefixadas na tabela do agregado:
+1. **Single-Column Primitive Flattening:** Single-attribute VOs (`Email`, `PasswordHash`, `Designation`, `SectorCode`, `LineCode`, `SensorSerialNumber`, `AbstractStockQuantity`) → typed columns in the aggregate table (`email VARCHAR(255)`, `stock_units INTEGER`).
+2. **Multi-Column Prefixed Flattening:** Composite VOs (`PersonName`, `TelemetryValue`) → prefixed columns in the aggregate table:
    * `User.name` (`PersonName`) → `first_name VARCHAR(75) NOT NULL`, `last_name VARCHAR(75) NOT NULL`.
    * `ThresholdRule` → `warning_limit DOUBLE PRECISION NOT NULL`, `critical_limit DOUBLE PRECISION NOT NULL`, `unit VARCHAR(20) NOT NULL`.
    * `TelemetryReading` → `raw_value DOUBLE PRECISION NOT NULL`, `moving_average DOUBLE PRECISION NOT NULL`, `moving_median DOUBLE PRECISION NOT NULL`, `unit VARCHAR(20) NOT NULL`.
-3. **Owned Dependent Tables (`ON DELETE CASCADE`):** Coleções multi-valor estritamente dentro da fronteira de um Aggregate Root — nomeadamente `User.roles: Set<UserRole>` — armazenadas em tabela dependente (`user_roles`) com PK composta `(user_id, role)` e `FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE` (KB §3.2 Rule 4).
+3. **Owned Dependent Tables (`ON DELETE CASCADE`):** Multi-value collections strictly within an Aggregate Root boundary — namely `User.roles: Set<UserRole>` — stored in a dependent table (`user_roles`) with a composite PK `(user_id, role)` and `FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE` (KB §3.2 Rule 4).
 
 ### 21.4. Cross-Aggregate References by Identifier Only
-Conforme regras DDD de agregados (KB §3.2, §21.1):
-* Agregados nunca embebem object references a outras Aggregate Roots em memória, nem repositórios executam eager ORM graph loads entre fronteiras de agregados.
-* Links cross-aggregate (`ConveyorLine → PlantSector`; `SensorNode → ConveyorLine`; `AnomalyAlert → SensorNode`, `ConveyorLine`, `User`) armazenam apenas o UUID alvo (`sector_id`, `line_id`, `sensor_id`, `acknowledged_by`) apoiado por `FOREIGN KEY ... ON DELETE RESTRICT`.
+Per DDD aggregate rules (KB §3.2, §21.1):
+* Aggregates never embed object references to other Aggregate Roots in memory, nor do repositories execute eager ORM graph loads across aggregate boundaries.
+* Cross-aggregate links (`ConveyorLine → PlantSector`; `SensorNode → ConveyorLine`; `AnomalyAlert → SensorNode`, `ConveyorLine`, `User`) store only the target UUID (`sector_id`, `line_id`, `sensor_id`, `acknowledged_by`) backed by `FOREIGN KEY ... ON DELETE RESTRICT`.
 
-### 21.5. Diagrama de Fronteira Domain ↔ Infrastructure
+### 21.5. Domain ↔ Infrastructure Boundary Diagram
 
 ```text
 +----------------------------------------+          +----------------------------------------+
@@ -1661,28 +1661,28 @@ CREATE TABLE outbox_webhook_events (
 ## 23. Concurrency Control, Transaction Demarcation & Reproducible Seeding
 
 ### 23.1. Atomic Multi-Table Transactions & Locking Protocols (`ADR-0003`)
-Todas as mutações multi-statement executam dentro de blocos explícitos `BEGIN ... COMMIT / ROLLBACK` usando um `PoolClient` dedicado adquirido de `pg.Pool`:
+All multi-statement mutations execute within explicit `BEGIN ... COMMIT / ROLLBACK` blocks using a dedicated `PoolClient` acquired from `pg.Pool`:
 
 1. **Telemetry Breach & Alert Creation (`TelemetryIngestionService`):**
-   * Insere a linha `telemetry_readings` enriquecida.
-   * Se houve breach de threshold, insere a linha `anomaly_alerts`, insere o registo JSONB `outbox_webhook_events` (Roadmap Task 3) e atualiza `conveyor_lines.operational_status` dentro da **mesma transação ACID exata**. Se qualquer passo falhar, toda a transação sofre rollback.
+   * Inserts the enriched `telemetry_readings` row.
+   * If a threshold breach occurred, inserts the `anomaly_alerts` row, inserts the `outbox_webhook_events` JSONB record (Roadmap Task 3), and updates `conveyor_lines.operational_status` within the **exact same ACID transaction**. If any step fails, the entire transaction is rolled back.
 
 2. **Pessimistic Row-Level Locking on Spare Parts (`SparePartsStockService` — Roadmap Task 2):**
-   * Executa `SELECT id, part_code, name, stock_units FROM spare_part_stock WHERE id = $1 FOR UPDATE`.
-   * Avalia `SparePartStock.consume(quantity)` no modelo de domínio.
-   * Atualiza `stock_units = $2` e insere o registo de auditoria `spare_part_movements` antes de emitir `COMMIT`.
+   * Executes `SELECT id, part_code, name, stock_units FROM spare_part_stock WHERE id = $1 FOR UPDATE`.
+   * Evaluates `SparePartStock.consume(quantity)` in the domain model.
+   * Updates `stock_units = $2` and inserts the `spare_part_movements` audit record before issuing `COMMIT`.
 
 3. **Optimistic Concurrency Control on Conveyor Lines (`PlantTopologyService` — Roadmap Task 2):**
-   * Executa `UPDATE conveyor_lines SET operational_status = $1, is_active = $2, version = version + 1, updated_at = NOW() WHERE id = $3 AND version = $4`.
-   * Se `rowCount === 0` (existindo o ID da linha), lança `OptimisticConcurrencyConflictException`, mapeada para HTTP `409 Conflict`.
+   * Executes `UPDATE conveyor_lines SET operational_status = $1, is_active = $2, version = version + 1, updated_at = NOW() WHERE id = $3 AND version = $4`.
+   * If `rowCount === 0` (and the line ID exists), throws `OptimisticConcurrencyConflictException`, mapped to HTTP `409 Conflict`.
 
 ### 23.2. Reproducible Seed Script (`003_seed_industrial_baseline.sql`)
-Para garantir arranques locais determinísticos e execuções repetíveis de Bruno/Supertest, as migrações de seed executam em estrita ordem de dependência de FKs:
+To guarantee deterministic local bootstraps and repeatable Bruno/Supertest runs, seed migrations execute in strict FK dependency order:
 
-1. **Identity Seeds:** 1 `ADMINISTRATOR` (`admin@flowguard.industrial`), 1 `ENGINEER` (`eng.ribeiro@flowguard.industrial`) e 1 `OPERATOR` (`op.silva@flowguard.industrial`) com hashes `Argon2id` pré-computados.
-2. **Plant Topology Seeds:** 2 Plant Sectors (`SEC-LOGISTICS-A`, `SEC-PACKAGING-B`) e 3 Conveyor Lines (`LINE-SORT-NORTH-01`, `LINE-SORT-SOUTH-02`, `LINE-PACK-MAIN-01`).
-3. **Sensor & Threshold Seeds:** 4 `SensorNode` calibrados (`MOTOR_VIBRATION`, `BELT_VELOCITY`, `BEARING_TEMPERATURE`, `OPTICAL_COUNTER`) com `ThresholdRule` anexadas.
-4. **Spare Parts Inventory Seeds:** 3 peças padrão de substituição (`PRT-BRG-6204`, `PRT-BELT-MOD-10`, `PRT-OPT-LENS-02`) com balances inteiros positivos iniciais.
+1. **Identity Seeds:** 1 `ADMINISTRATOR` (`admin@flowguard.industrial`), 1 `ENGINEER` (`eng.ribeiro@flowguard.industrial`), and 1 `OPERATOR` (`op.silva@flowguard.industrial`) with precomputed `Argon2id` hashes.
+2. **Plant Topology Seeds:** 2 Plant Sectors (`SEC-LOGISTICS-A`, `SEC-PACKAGING-B`) and 3 Conveyor Lines (`LINE-SORT-NORTH-01`, `LINE-SORT-SOUTH-02`, `LINE-PACK-MAIN-01`).
+3. **Sensor & Threshold Seeds:** 4 calibrated `SensorNode`s (`MOTOR_VIBRATION`, `BELT_VELOCITY`, `BEARING_TEMPERATURE`, `OPTICAL_COUNTER`) with attached `ThresholdRule`s.
+4. **Spare Parts Inventory Seeds:** 3 standard replacement parts (`PRT-BRG-6204`, `PRT-BELT-MOD-10`, `PRT-OPT-LENS-02`) with initial positive integer balances.
 
 ---
 
@@ -1830,24 +1830,24 @@ erDiagram
 
 | Foreign Key Constraint | Source Table & Column | Target Table & Column | Delete Action | Architectural Rationale & Governing Rule |
 |---|---|---|---|---|
-| `fk_user_roles_user` | `user_roles(user_id)` | `users(id)` | **`CASCADE`** | VO collection owned strictly inside `User` aggregate boundary (KB §3.2 Rule 4). |
-| `fk_conveyor_lines_sector` | `conveyor_lines(sector_id)` | `plant_sectors(id)` | **`RESTRICT`** | Previne apagar `PlantSector` com conveyor lines (`409 Conflict`). |
-| `fk_sensor_nodes_line` | `sensor_nodes(line_id)` | `conveyor_lines(id)` | **`RESTRICT`** | Previne apagar `ConveyorLine` com sensores montados (`409 Conflict`). |
-| `fk_threshold_rules_sensor` | `threshold_rules(sensor_id)` | `sensor_nodes(id)` | **`CASCADE`** | `ThresholdRule` é entidade interna owned por `SensorNode`; remover sensor sem referências remove a sua regra. |
-| `fk_telemetry_readings_sensor` | `telemetry_readings(sensor_id)` | `sensor_nodes(id)` | **`RESTRICT`** | Protege logs históricos de telemetria; sensores com dados registados devem ser soft-deactivated, nunca purged. |
-| `fk_alerts_sensor` | `anomaly_alerts(sensor_id)` | `sensor_nodes(id)` | **`RESTRICT`** | Preserva histórico de auditoria de anomalias ligado ao transdutor de origem. |
-| `fk_alerts_line` | `anomaly_alerts(line_id)` | `conveyor_lines(id)` | **`RESTRICT`** | Preserva histórico de auditoria de anomalias ligado à linha afetada. |
-| `fk_alerts_reading` | `anomaly_alerts(reading_id)` | `telemetry_readings(id)` | **`SET NULL`** | Permite archival/partitioning de readings antigas sem perder o registo de anomalia. |
-| `fk_alerts_ack_user` | `anomaly_alerts(acknowledged_by)` | `users(id)` | **`RESTRICT`** | Previne apagar user account que reconheceu alertas de segurança industrial (deactivation obrigatória). |
-| `fk_outbox_alert` | `outbox_webhook_events(alert_id)` | `anomaly_alerts(id)` | **`CASCADE`** | Outbox delivery records pertencem ao ciclo de vida do alerta que os desencadeou. |
-| `fk_part_movements_part` | `spare_part_movements(part_id)` | `spare_part_stock(id)` | **`RESTRICT`** | Previne apagar spare-part catalog item com histórico de inventory movements. |
+| `fk_user_roles_user` | `user_roles(user_id)` | `users(id)` | **`CASCADE`** | VO collection owned strictly inside the `User` aggregate boundary (KB §3.2 Rule 4). |
+| `fk_conveyor_lines_sector` | `conveyor_lines(sector_id)` | `plant_sectors(id)` | **`RESTRICT`** | Prevents deleting a `PlantSector` with conveyor lines (`409 Conflict`). |
+| `fk_sensor_nodes_line` | `sensor_nodes(line_id)` | `conveyor_lines(id)` | **`RESTRICT`** | Prevents deleting a `ConveyorLine` with mounted sensors (`409 Conflict`). |
+| `fk_threshold_rules_sensor` | `threshold_rules(sensor_id)` | `sensor_nodes(id)` | **`CASCADE`** | `ThresholdRule` is an internal entity owned by `SensorNode`; removing an unreferenced sensor removes its rule. |
+| `fk_telemetry_readings_sensor` | `telemetry_readings(sensor_id)` | `sensor_nodes(id)` | **`RESTRICT`** | Protects historical telemetry logs; sensors with recorded data must be soft-deactivated, never purged. |
+| `fk_alerts_sensor` | `anomaly_alerts(sensor_id)` | `sensor_nodes(id)` | **`RESTRICT`** | Preserves anomaly audit history tied to the source transducer. |
+| `fk_alerts_line` | `anomaly_alerts(line_id)` | `conveyor_lines(id)` | **`RESTRICT`** | Preserves anomaly audit history tied to the affected line. |
+| `fk_alerts_reading` | `anomaly_alerts(reading_id)` | `telemetry_readings(id)` | **`SET NULL`** | Allows archival/partitioning of old readings without losing the anomaly record. |
+| `fk_alerts_ack_user` | `anomaly_alerts(acknowledged_by)` | `users(id)` | **`RESTRICT`** | Prevents deleting a user account that acknowledged industrial safety alerts (deactivation required). |
+| `fk_outbox_alert` | `outbox_webhook_events(alert_id)` | `anomaly_alerts(id)` | **`CASCADE`** | Outbox delivery records belong to the lifecycle of the alert that triggered them. |
+| `fk_part_movements_part` | `spare_part_movements(part_id)` | `spare_part_stock(id)` | **`RESTRICT`** | Prevents deleting a spare-part catalog item with inventory movement history. |
 
 ---
 
 ## 25. CQRS Read Views & Indexing Strategy
 
 ### 25.1. View 1: `v_conveyor_line_health_summary`
-Agrega cada conveyor line com o sector code pai, contagem de sensores ativos e contagens real-time de alertas abertos (warning/critical) numa única query:
+Aggregates each conveyor line with its parent sector code, active sensor count, and real-time open alert counts (warning/critical) in a single query:
 ```sql
 CREATE OR REPLACE VIEW v_conveyor_line_health_summary AS
 SELECT
@@ -1872,7 +1872,7 @@ GROUP BY cl.id, ps.sector_code, ps.name;
 ```
 
 ### 25.2. View 2: `v_sensor_latest_telemetry`
-Usa `DISTINCT ON` para projetar cada sensor node com a sua threshold rule ativa e a reading sliding-window mais recente:
+Uses `DISTINCT ON` to project each sensor node with its active threshold rule and most recent sliding-window reading:
 ```sql
 CREATE OR REPLACE VIEW v_sensor_latest_telemetry AS
 SELECT DISTINCT ON (sn.id)
@@ -1903,9 +1903,9 @@ ORDER BY sn.id, rd.recorded_at DESC NULLS LAST;
    * `CREATE UNIQUE INDEX uq_sensor_nodes_serial_upper ON sensor_nodes (UPPER(serial_number));`
    * `CREATE UNIQUE INDEX uq_spare_part_code_upper ON spare_part_stock (UPPER(part_code));`
 2. **Time-Series Telemetry & Alert Lookup Indexes:**
-   * `CREATE INDEX idx_telemetry_sensor_recorded_desc ON telemetry_readings (sensor_id, recorded_at DESC);` (acelera `v_sensor_latest_telemetry` e queries de bootstrap sliding-window).
-   * `CREATE INDEX idx_alerts_line_status_severity ON anomaly_alerts (line_id, status, severity);` (acelera `v_conveyor_line_health_summary` e filtragem de alertas do operador).
-   * `CREATE INDEX idx_outbox_pending_created ON outbox_webhook_events (delivery_status, created_at ASC) WHERE delivery_status = 'PENDING';` (partial index que otimiza o worker outbox relay do Roadmap Task 3).
+   * `CREATE INDEX idx_telemetry_sensor_recorded_desc ON telemetry_readings (sensor_id, recorded_at DESC);` (accelerates `v_sensor_latest_telemetry` and sliding-window bootstrap queries).
+   * `CREATE INDEX idx_alerts_line_status_severity ON anomaly_alerts (line_id, status, severity);` (accelerates `v_conveyor_line_health_summary` and operator alert filtering).
+   * `CREATE INDEX idx_outbox_pending_created ON outbox_webhook_events (delivery_status, created_at ASC) WHERE delivery_status = 'PENDING';` (partial index optimizing the Roadmap Task 3 outbox relay worker).
 
 ---
 
@@ -1916,7 +1916,7 @@ Alphabetically organized domain, statistical, and architectural concepts drawn f
 | Concept | Explanation | Source / Reference |
 |---|---|---|
 | **Abstract Stock Quantity (`AbstractStockQuantity`)** | Immutable VO representing spare-part inventory balances as discrete, normalized non-negative integers ($u \in \mathbb{N}_0$). Eliminates physical unit conversion overhead while strictly preventing negative balances. | `01-problem-statement.md` §2.3; `domain-model.puml`; `ADR-0003` |
-| **Access Control (RBAC)** | Server-side security mechanism restricting endpoint execution based on authenticated user's assigned roles (`OPERATOR`, `ENGINEER`, `ADMINISTRATOR`) enforced via NestJS `RolesGuard`. | `02-context.md` §3; `ADR-0005`; KB §9.4, §16.1 |
+| **Access Control (RBAC)** | Server-side security mechanism restricting endpoint execution based on the authenticated user's assigned roles (`OPERATOR`, `ENGINEER`, `ADMINISTRATOR`) enforced via NestJS `RolesGuard`. | `02-context.md` §3; `ADR-0005`; KB §9.4, §16.1 |
 | **Acknowledge Alert (`acknowledge`)** | Intentional domain operation executed by a `Plant Operator` (`OPERATOR`) transitioning an `AnomalyAlert` from `OPEN` to `ACKNOWLEDGED`, recording the operator's `UserId`, timestamp, and diagnostic note. | `08-architecture-summary.md` §2.5; `ADR-0006` |
 | **Aggregate & Aggregate Root** | Cluster of domain entities and value objects treated as a single transactional (ACID) consistency boundary. External aggregates may only reference an Aggregate Root (`User`, `PlantSector`, `ConveyorLine`, `SensorNode`, `AnomalyAlert`, `SparePartStock`) by its unique identifier. | `domain-model.sketch.md` §2; KB §3.2, §3.3 |
 | **Alert Severity (`AlertSeverity`)** | Enumeration classifying threshold breach criticality: `WARNING` (degraded operation requiring inspection) or `CRITICAL` (imminent failure halting the conveyor line). | `domain-model.puml`; `ADR-0004` |
@@ -1941,7 +1941,7 @@ Alphabetically organized domain, statistical, and architectural concepts drawn f
 | **F.I.R.S.T. Principles** | Quality criteria for automated tests (*Fast, Independent, Repeatable, Self-Validating, Timely*) satisfied across Jest unit tests, in-memory Supertest suites, and Bruno CLI workflows. | `ADR-0007`; KB §14.2 |
 | **Industrial Engineer (`ENGINEER`)** | Authenticated stakeholder role authorized to configure plant sectors, conveyor lines, sensor nodes, sliding-window threshold rules, and spare-part replenishments. | `02-context.md` §3; `ADR-0005` |
 | **Interquartile Range (IQR) Outlier Filter** | Statistical dispersion filter ($IQR = Q_3 - Q_1$) scheduled in **Roadmap Task 1** to strip extreme single-sample electromagnetic or impact spikes from high-frequency vibration streams before threshold evaluation. | `01-problem-statement.md` §4; `ADR-0004` |
-| **Line Status (`LineStatus`)** | Enumeration governing operational state of a `ConveyorLine`: `RUNNING`, `DEGRADED_WARNING` (warning threshold breached), `FAULT_HALTED` (critical threshold breached), `MAINTENANCE`, or `DEACTIVATED`. | `domain-model.puml`; `08-architecture-summary.md` §2.2 |
+| **Line Status (`LineStatus`)** | Enumeration governing the operational state of a `ConveyorLine`: `RUNNING`, `DEGRADED_WARNING` (warning threshold breached), `FAULT_HALTED` (critical threshold breached), `MAINTENANCE`, or `DEACTIVATED`. | `domain-model.puml`; `08-architecture-summary.md` §2.2 |
 | **Mass-Assignment Defense** | Security rule forbidding client payloads from injecting privileged fields (`roles`, `status`, `id`) during registration or updates, enforced via strict DTO whitelisting and Joi/Zod `stripUnknown: true`. | `ADR-0005`; `10-api-design-specification.md` §6; KB §9.4 |
 | **Modular Monolith** | Macro-architectural deployment style packaging all vertical domain modules (`Identity`, `Topology`, `Telemetry`, `Alerting`, `Inventory`) into a single Node.js runtime process, honoring the 1st Commandment of Distributed Systems (*"Do not distribute"*). | `ADR-0001`; `03-principles-and-guidelines.md` §2; KB §7.4 |
 | **Moving Average ($\mu_W$)** | Arithmetic mean computed in memory across the active sliding window $W$ ($\mu_W = \frac{1}{|W|}\sum x_i$) on every ingested sensor reading to smooth short-term signal jitter. | `01-problem-statement.md` §2.1; `ADR-0004` |
@@ -1987,7 +1987,7 @@ Alphabetically organized domain, statistical, and architectural concepts drawn f
 * **Spare Parts Inventory:** `/spare-parts`, `/spare-parts/{id}/replenish`, `/spare-parts/{id}/consume`.
 
 ### 27.3. Security Scheme
-* **`BearerAuth`:** `type: http`, `scheme: bearer`, `bearerFormat: JWT` — stateless RFC 7519 JWT emitido por `POST /api/v1/auth/login`.
+* **`BearerAuth`:** `type: http`, `scheme: bearer`, `bearerFormat: JWT` — stateless RFC 7519 JWT issued by `POST /api/v1/auth/login`.
 
 ### 27.4. Components Summary
 * **Parameters:** `UuidPathParam` (`id` UUIDv4), `PageParam` (`page ≥ 1`, default 1), `PageSizeParam` (`1 ≤ pageSize ≤ 100`, default 20).
@@ -1996,114 +1996,114 @@ Alphabetically organized domain, statistical, and architectural concepts drawn f
 * **Schemas:** `HealthStatusResponseDTO`, `ErrorResponseDTO`, `LoginRequestDTO`, `LoginResponseDTO`, `PublicRegisterRequestDTO`, `CreateUserRequestDTO`, `UpdateUserStatusRequestDTO`, `UpdateUserRolesRequestDTO`, `UserResponseDTO`, `PaginatedUsersResponseDTO`, `CreatePlantSectorRequestDTO`, `UpdatePlantSectorRequestDTO`, `PlantSectorResponseDTO`, `CreateConveyorLineRequestDTO`, `UpdateLineOperationalStatusRequestDTO`, `ConveyorLineHealthSummaryResponseDTO`, `CreateSensorNodeRequestDTO`, `UpsertThresholdRuleRequestDTO`, `ThresholdRuleResponseDTO`, `SensorNodeResponseDTO`, `IngestTelemetryReadingRequestDTO`, `TelemetryReadingResponseDTO`, `TelemetryIngestionEvaluationResponseDTO`, `PaginatedTelemetryReadingsResponseDTO`, `AcknowledgeAlertRequestDTO`, `AnomalyAlertResponseDTO`, `PaginatedAnomalyAlertsResponseDTO`, `CreateSparePartRequestDTO`, `StockAdjustmentRequestDTO`, `SparePartStockResponseDTO`.
 
 ### 27.5. Executable Tooling
-* **Swagger UI / ReDoc:** servidos em `/api/docs` (ADR-0006).
-* **Bruno CLI:** `npx @usebruno/cli run` executa as coleções `.bru` versionadas no repositório (ADR-0007, ADR-0008).
-* **Contract Verification:** todas as respostas do OpenAPI são verificadas por Supertest + Bruno (ver §16.1).
+* **Swagger UI / ReDoc:** served at `/api/docs` (ADR-0006).
+* **Bruno CLI:** `npx @usebruno/cli run` executes the `.bru` collections versioned in the repository (ADR-0007, ADR-0008).
+* **Contract Verification:** all OpenAPI responses are verified by Supertest + Bruno (see §16.1).
 
 ---
 
 ## 27. OpenAPI 3.0.3 Contract Reference (Summary)
 
-*(Secção §27 preservada integralmente da v2.3 — ver mensagem anterior desta conversa para o conteúdo completo. Mantém-se como referência autoritária do contrato OpenAPI 3.0.3, incluindo metadata, servers, tags, security scheme, parameters, schemas summary e executable tooling.)*
+*(Section §27 fully preserved from v2.3 — see the previous message of this conversation for the complete content. It remains the authoritative reference for the OpenAPI 3.0.3 contract, including metadata, servers, tags, security scheme, parameters, schemas summary, and executable tooling.)*
 
 ---
 
 ## 28. Detailed Engineering Roadmap & Milestone Breakdown (28+ Hours)
 
-### 28.1. Estado do Projeto & Âmbito do Roadmap
+### 28.1. Project Status & Roadmap Scope
 * **Project Status:** Active Baseline Implemented (`v1.0.0`)
 * **Planned Upcoming Effort:** ~28 Hours across 5 Engineering Milestones
 * **Architecture Reference:** Clean / Onion Modular Monolith (`docs/sad/`, `ADR-0001` to `ADR-0008`)
 
-> **Nota de evolução:** Esta secção formaliza e expande o roadmap de 20+ horas referido em §9, detalhando agora **28+ horas** organizadas em 5 milestones com deliverables granulares, target layers e arquitetura de referência. O conteúdo de §9 permanece válido como visão macro; esta secção é a **fonte autoritária** para planeamento de iteração.
+> **Evolution note:** This section formalizes and expands the 20+ hour roadmap referred to in §9, now detailing **28+ hours** organized into 5 milestones with granular deliverables, target layers, and reference architecture. The content of §9 remains valid as a macro view; this section is the **authoritative source** for iteration planning.
 
 ### 28.2. Baseline State (Already Implemented)
-O FlowGuard possui uma fundação arquitetural e funcional estabelecida que cobre:
+FlowGuard has an established architectural and functional foundation covering:
 
-* **Architectural & Domain Documentation (`docs/`):** Software Architecture Document (SAD) completo, 8 Architecture Decision Records (`ADR-0001`–`ADR-0008`), diagramas C4 Model (Levels 1–3), Domain Model (`dm.puml`), contrato OpenAPI 3.0.3 (`docs/api/openapi.yaml`) e Glossário de Linguagem Ubíqua.
-* **Database & Infrastructure (`docker-compose.yml`, `migrations/001–008`):** Schema PostgreSQL 16 reprodutível em 3NF/BCNF com `ON DELETE RESTRICT` referential guards, `CHECK` constraints, functional case-insensitive unique indexes, CQRS read views (`v_conveyor_line_health_summary`, `v_sensor_latest_telemetry`) e seed data determinística.
+* **Architectural & Domain Documentation (`docs/`):** Complete Software Architecture Document (SAD), 8 Architecture Decision Records (`ADR-0001`–`ADR-0008`), C4 Model diagrams (Levels 1–3), Domain Model (`dm.puml`), OpenAPI 3.0.3 contract (`docs/api/openapi.yaml`), and Ubiquitous Language Glossary.
+* **Database & Infrastructure (`docker-compose.yml`, `migrations/001–008`):** Reproducible PostgreSQL 16 schema in 3NF/BCNF with `ON DELETE RESTRICT` referential guards, `CHECK` constraints, functional case-insensitive unique indexes, CQRS read views (`v_conveyor_line_health_summary`, `v_sensor_latest_telemetry`), and deterministic seed data.
 * **Core Domain & Application Layers (`backend/src/`):**
   * Stateless JWT authentication + `Argon2id` password hashing (`FG-AUTH`).
   * Plant Sector and Conveyor Line lifecycle management (`FG-TOPO`).
-  * Sensor Node registration, calibration e Threshold Rule bounds (`FG-SENS`).
-  * Baseline circular Ring Buffer (`SlidingWindowBuffer`) com Moving Average ($\mu_W$) calculation (`FG-INGEST`).
-  * Anomaly Alert creation, operator acknowledgement e spare-part stock management (`FG-ALERT`, `FG-STOCK`).
+  * Sensor Node registration, calibration, and Threshold Rule bounds (`FG-SENS`).
+  * Baseline circular Ring Buffer (`SlidingWindowBuffer`) with Moving Average ($\mu_W$) calculation (`FG-INGEST`).
+  * Anomaly Alert creation, operator acknowledgement, and spare-part stock management (`FG-ALERT`, `FG-STOCK`).
 
 ### 28.3. Milestone 1: High-Frequency Moving Median ($\tilde{x}_W$) & IQR Outlier Rejection Engine
 
-| Atributo | Detalhe |
+| Attribute | Detail |
 |---|---|
 | **Estimated Effort** | **6.0 Hours** |
 | **Target Layer** | `backend/src/domain/sensor/` (`SlidingWindowBuffer.ts`, `TelemetryEvaluationEngine.ts`) |
 | **Architectural Reference** | `ADR-0004`, `01-problem-statement.md` (§2.1, §4 Task 1) |
 
 **Scope & Deliverables:**
-- [ ] Implementar **dual-heap (Min-Heap / Max-Heap)** order-statistic tracking dentro do `SlidingWindowBuffer` para calcular o Moving Median ($\tilde{x}_W$) em tempo $O(\log W)$ sem copiar ou ordenar o array completo da janela em cada amostra.
-- [ ] Adicionar **Interquartile Range ($IQR = Q_3 - Q_1$)** spike filtering para transdutores `MOTOR_VIBRATION` e `OPTICAL_COUNTER`, de forma a remover ruído eletromagnético de amostra única antes da comparação com thresholds.
-- [ ] Implementar server startup warm-up (`bootstrapWindowState`) para hidratar ring buffers ativos a partir das últimas $N$ leituras persistidas em `telemetry_readings` no restart do processo.
-- [ ] Adicionar Jest unit test suites abrangentes cobrindo window sizes pares/ímpares, impulse spike rejection e buffer rollover invariants.
+- [ ] Implement **dual-heap (Min-Heap / Max-Heap)** order-statistic tracking within `SlidingWindowBuffer` to compute the Moving Median ($\tilde{x}_W$) in $O(\log W)$ time without copying or sorting the full window array on every sample.
+- [ ] Add **Interquartile Range ($IQR = Q_3 - Q_1$)** spike filtering for `MOTOR_VIBRATION` and `OPTICAL_COUNTER` transducers, in order to remove single-sample electromagnetic noise before threshold comparison.
+- [ ] Implement server startup warm-up (`bootstrapWindowState`) to hydrate active ring buffers from the last $N$ readings persisted in `telemetry_readings` on process restart.
+- [ ] Add comprehensive Jest unit test suites covering even/odd window sizes, impulse spike rejection, and buffer rollover invariants.
 
 ### 28.4. Milestone 2: High-Contention Concurrency Control (Optimistic & Pessimistic Locking)
 
-| Atributo | Detalhe |
+| Attribute | Detail |
 |---|---|
 | **Estimated Effort** | **5.0 Hours** |
 | **Target Layer** | `backend/src/infrastructure/persistence/repositories/` & `backend/src/application/` |
 | **Architectural Reference** | `ADR-0003`, `04-key-scenarios.md` (§5), `11-relational-mapping-and-persistence-strategy.md` (§4.1) |
 
 **Scope & Deliverables:**
-- [ ] Enforce **Optimistic Concurrency Control** (`version` column check: `WHERE id = $1 AND version = $2`) em transições de operational status de `ConveyorLine` e updates de `ThresholdRule`, lançando `OptimisticConcurrencyConflictException` (`409 Conflict`) em stale writes.
-- [ ] Enforce **Pessimistic Row-Level Locking** (`SELECT ... FOR UPDATE`) dentro de transações PostgreSQL `PoolClient` explícitas (`withTransaction`) para operações `SparePartStock.consume()`, prevenindo race conditions e inventory balances negativos sob pedidos de manutenção concorrentes.
-- [ ] Escrever concurrent stress integration tests verificando que parallel stock deductions e simultaneous line status edits serializam deterministicamente sem lost updates.
+- [ ] Enforce **Optimistic Concurrency Control** (`version` column check: `WHERE id = $1 AND version = $2`) on `ConveyorLine` operational status transitions and `ThresholdRule` updates, throwing `OptimisticConcurrencyConflictException` (`409 Conflict`) on stale writes.
+- [ ] Enforce **Pessimistic Row-Level Locking** (`SELECT ... FOR UPDATE`) within explicit PostgreSQL `PoolClient` transactions (`withTransaction`) for `SparePartStock.consume()` operations, preventing race conditions and negative inventory balances under concurrent maintenance requests.
+- [ ] Write concurrent stress integration tests verifying that parallel stock deductions and simultaneous line status edits serialize deterministically without lost updates.
 
 ### 28.5. Milestone 3: Transactional Outbox Pattern & Asynchronous Webhook Alert Dispatcher
 
-| Atributo | Detalhe |
+| Attribute | Detail |
 |---|---|
 | **Estimated Effort** | **6.5 Hours** |
 | **Target Layer** | `backend/src/application/alert/`, `backend/src/infrastructure/persistence/repositories/PostgresAnomalyAlertRepository.ts` |
 | **Architectural Reference** | `ADR-0004`, `ADR-0006`, `12-database-structure.md` (`outbox_webhook_events`) |
 
 **Scope & Deliverables:**
-- [ ] Persistir um registo `outbox_webhook_events` (status `PENDING`, `JSONB` payload) dentro da **mesma transação ACID exata** que cria um `AnomalyAlert` `WARNING` ou `CRITICAL`.
-- [ ] Implementar `HttpWebhookDispatcherAdapter` (implementando `IAlertWebhookDispatcher`) com configurable timeout, **HMAC-SHA256 payload signature headers** (`X-FlowGuard-Signature`) e exponential backoff retry logic.
-- [ ] Construir um background relay poller não-bloqueante que query `idx_outbox_pending_created` (`FOR UPDATE SKIP LOCKED`) para despachar pending events e transitar rows para `DISPATCHED` ou `FAILED`.
-- [ ] Adicionar unit e integration tests usando mocked webhook receivers.
+- [ ] Persist an `outbox_webhook_events` record (status `PENDING`, `JSONB` payload) within the **exact same ACID transaction** that creates a `WARNING` or `CRITICAL` `AnomalyAlert`.
+- [ ] Implement `HttpWebhookDispatcherAdapter` (implementing `IAlertWebhookDispatcher`) with configurable timeout, **HMAC-SHA256 payload signature headers** (`X-FlowGuard-Signature`), and exponential backoff retry logic.
+- [ ] Build a non-blocking background relay poller that queries `idx_outbox_pending_created` (`FOR UPDATE SKIP LOCKED`) to dispatch pending events and transition rows to `DISPATCHED` or `FAILED`.
+- [ ] Add unit and integration tests using mocked webhook receivers.
 
 ### 28.6. Milestone 4: Exhaustive Boundary Validation & Git-Native Bruno (`.bru`) Black-Box Suites
 
-| Atributo | Detalhe |
+| Attribute | Detail |
 |---|---|
 | **Estimated Effort** | **6.0 Hours** |
 | **Target Layer** | `backend/tests/integration/` & `backend/tests/bruno/FlowGuard/` |
 | **Architectural Reference** | `ADR-0006`, `ADR-0007`, `ADR-0008` |
 
 **Scope & Deliverables:**
-- [ ] Completar Joi boundary validation pipes em todos os request DTOs (`stripUnknown: true`), garantindo que mass-assignment attempts em `/auth/register` e `/users` são stripped ou rejected com structured `400 Bad Request` diagnostics.
-- [ ] Expandir in-memory **Supertest** integration suites (`*.controller.spec.ts`) para assertar todos os RFC status codes (`200`, `201`, `204`, `400`, `401`, `403`, `404`, `409`, `422`) em cada módulo.
-- [ ] Autorar chained **Bruno (`.bru` / `.yml`)** API collections sob `backend/tests/bruno/FlowGuard/` cobrindo end-to-end stateful workflows:
+- [ ] Complete Joi boundary validation pipes on all request DTOs (`stripUnknown: true`), ensuring mass-assignment attempts on `/auth/register` and `/users` are stripped or rejected with structured `400 Bad Request` diagnostics.
+- [ ] Expand in-memory **Supertest** integration suites (`*.controller.spec.ts`) to assert all RFC status codes (`200`, `201`, `204`, `400`, `401`, `403`, `404`, `409`, `422`) on each module.
+- [ ] Author chained **Bruno (`.bru` / `.yml`)** API collections under `backend/tests/bruno/FlowGuard/` covering end-to-end stateful workflows:
   1. **`01-Auth_and_Users`:** Admin login, JWT extraction (`bru.setEnvVar`), staff provisioning, RBAC role guards (`401`/`403`).
   2. **`02-Plant_Topology`:** Sector & line creation, `ON DELETE RESTRICT` conflict verification (`409 Conflict`).
-  3. **`03-Sensors_and_Thresholds`:** Sensor attachment e invalid threshold rejection (`critical <= warning` $\rightarrow$ `422`).
+  3. **`03-Sensors_and_Thresholds`:** Sensor attachment and invalid threshold rejection (`critical <= warning` $\rightarrow$ `422`).
   4. **`04-Telemetry_Sliding_Window`:** Multi-sample telemetry burst triggering automatic line halt (`FAULT_HALTED`).
-  5. **`05-Anomaly_Alerts` & `06-Spare_Parts_Stock`:** Operator alert acknowledgement e non-negative stock deduction boundary tests.
+  5. **`05-Anomaly_Alerts` & `06-Spare_Parts_Stock`:** Operator alert acknowledgement and non-negative stock deduction boundary tests.
 
 ### 28.7. Milestone 5: OpenMetrics / Prometheus Telemetry Scraper Endpoint (`/api/v1/metrics`)
 
-| Atributo | Detalhe |
+| Attribute | Detail |
 |---|---|
 | **Estimated Effort** | **4.5 Hours** |
 | **Target Layer** | `backend/src/presentation/http/controllers/HealthController.ts`, `backend/src/application/topology/LineHealthQueryService.ts` |
 | **Architectural Reference** | `01-problem-statement.md` (§2.5, §4 Task 5), `08-architecture-summary.md` (§3.1) |
 
 **Scope & Deliverables:**
-- [ ] Implementar um in-memory metrics registry tracking real-time counters e gauges:
+- [ ] Implement an in-memory metrics registry tracking real-time counters and gauges:
   * `flowguard_telemetry_readings_ingested_total`
   * `flowguard_sliding_window_evaluation_duration_ms`
   * `flowguard_active_anomaly_alerts`
   * `flowguard_conveyor_lines_by_status`
-- [ ] Expor `GET /api/v1/metrics` retornando `text/plain; version=0.0.4; charset=utf-8` compliant com Prometheus scrapers.
-- [ ] Adicionar automated Supertest assertions verificando OpenMetrics exposition syntax e counter increments após telemetry ingestion.
+- [ ] Expose `GET /api/v1/metrics` returning `text/plain; version=0.0.4; charset=utf-8` compliant with Prometheus scrapers.
+- [ ] Add automated Supertest assertions verifying OpenMetrics exposition syntax and counter increments after telemetry ingestion.
 
 ### 28.8. Summary of Planned Effort
 
@@ -2120,24 +2120,24 @@ O FlowGuard possui uma fundação arquitetural e funcional estabelecida que cobr
 
 ## 29. Infrastructure Deployment & Docker Compose Configuration
 
-### 29.1. Visão Geral do Deployment Local
-O FlowGuard disponibiliza um ambiente de deployment local reprodutível via **Docker Compose** (`docker-compose.yml`), que orquestra dois serviços primários:
-1. **`postgres`** — PostgreSQL 16 Alpine, container de base de dados relacional.
+### 29.1. Local Deployment Overview
+FlowGuard provides a reproducible local deployment environment via **Docker Compose** (`docker-compose.yml`), which orchestrates two primary services:
+1. **`postgres`** — PostgreSQL 16 Alpine, relational database container.
 2. **`backend`** — FlowGuard Back-End Modular Monolith (Node.js / NestJS / TypeScript).
 
-Este setup garante que o ambiente local espelha fielmente as constraints de produção definidas em `ADR-0003` (PostgreSQL 16+) e `ADR-0001` (Modular Monolith deployable as a single unit).
+This setup guarantees that the local environment faithfully mirrors the production constraints defined in `ADR-0003` (PostgreSQL 16+) and `ADR-0001` (Modular Monolith deployable as a single unit).
 
 ### 29.2. Docker Compose Service Definitions
 
 #### 29.2.1. PostgreSQL Service (`postgres`)
 
-| Atributo | Valor |
+| Attribute | Value |
 |---|---|
 | **Image** | `postgres:16-alpine` |
 | **Container Name** | `flowguard_postgres` |
 | **Restart Policy** | `unless-stopped` |
 | **Port Mapping** | `5433:5432` |
-| **Volume Mounts** | `postgres_data:/var/lib/postgresql/data` (persistência); `./backend/src/infrastructure/persistence/migrations:/docker-entrypoint-initdb.d:ro` (auto-run de migrations no primeiro boot) |
+| **Volume Mounts** | `postgres_data:/var/lib/postgresql/data` (persistence); `./backend/src/infrastructure/persistence/migrations:/docker-entrypoint-initdb.d:ro` (auto-run of migrations on first boot) |
 | **Network** | `flowguard-network` (bridge driver) |
 
 **Environment Variables:**
@@ -2161,20 +2161,20 @@ timeout: 5s
 retries: 5
 ```
 
-> **Nota de segurança:** As credenciais hardcoded (`flowguard_user` / `flowguard_password`) destinam-se exclusivamente a ambientes de desenvolvimento local. Em staging/produção, estas devem ser substituídas por secrets geridos (ex: GitHub Actions Secrets, AWS Secrets Manager, HashiCorp Vault) e nunca commitadas no repositório.
+> **Security note:** The hardcoded credentials (`flowguard_user` / `flowguard_password`) are intended exclusively for local development environments. In staging/production, these must be replaced by managed secrets (e.g., GitHub Actions Secrets, AWS Secrets Manager, HashiCorp Vault) and never committed to the repository.
 
-> **Nota de migrations:** O volume read-only `./backend/src/infrastructure/persistence/migrations:/docker-entrypoint-initdb.d:ro` faz com que todos os ficheiros `.sql` presentes nesse diretório sejam executados automaticamente pelo entrypoint oficial do PostgreSQL **apenas na primeira inicialização** do volume `postgres_data`. Para re-executar migrations, é necessário remover o volume (`docker compose down -v`).
+> **Migrations note:** The read-only volume `./backend/src/infrastructure/persistence/migrations:/docker-entrypoint-initdb.d:ro` causes all `.sql` files present in that directory to be automatically executed by the official PostgreSQL entrypoint **only on the first initialization** of the `postgres_data` volume. To re-run migrations, the volume must be removed (`docker compose down -v`).
 
 #### 29.2.2. Backend Service (`backend`)
 
-| Atributo | Valor |
+| Attribute | Value |
 |---|---|
 | **Build Context** | `./backend` |
-| **Dockerfile** | `Dockerfile` (no diretório `backend/`) |
+| **Dockerfile** | `Dockerfile` (in the `backend/` directory) |
 | **Container Name** | `flowguard_backend` |
 | **Restart Policy** | `unless-stopped` |
 | **Port Mapping** | `3050:3050` |
-| **Depends On** | `postgres` com `condition: service_healthy` |
+| **Depends On** | `postgres` with `condition: service_healthy` |
 | **Network** | `flowguard-network` (bridge driver) |
 
 **Environment Variables:**
@@ -2190,9 +2190,9 @@ JWT_SECRET: ${JWT_SECRET:-flowguard-default-secret-key-change-in-production-2026
 CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:3050}
 ```
 
-> **Nota de segurança (JWT_SECRET):** O valor default `${JWT_SECRET:-flowguard-default-secret-key-change-in-production-2026}` é um placeholder explícito que **deve ser sobrescrito** em qualquer ambiente não-local. A variável de ambiente `JWT_SECRET` deve ser fornecida via ficheiro `.env` não versionado ou via secrets manager. O mesmo se aplica a `CORS_ALLOWED_ORIGINS`, que usa uma allowlist explícita (nunca `*`), conforme `ADR-0005` e §7.
+> **Security note (JWT_SECRET):** The default value `${JWT_SECRET:-flowguard-default-secret-key-change-in-production-2026}` is an explicit placeholder that **must be overridden** in any non-local environment. The `JWT_SECRET` environment variable must be provided via a non-versioned `.env` file or via a secrets manager. The same applies to `CORS_ALLOWED_ORIGINS`, which uses an explicit allowlist (never `*`), per `ADR-0005` and §7.
 
-> **Nota de dependências:** A condição `depends_on.postgres.condition: service_healthy` garante que o backend só arranca após o PostgreSQL passar no healthcheck (`pg_isready`), evitando race conditions de conexão no boot.
+> **Dependencies note:** The condition `depends_on.postgres.condition: service_healthy` guarantees that the backend only starts after PostgreSQL passes the healthcheck (`pg_isready`), avoiding connection race conditions at boot.
 
 ### 29.3. Volumes & Networks
 
@@ -2202,7 +2202,7 @@ volumes:
   postgres_data:
     driver: local
 ```
-Persiste os datafiles do PostgreSQL entre `docker compose down` / `up`, garantindo durabilidade ACID (`ADR-0003`).
+Persists PostgreSQL datafiles between `docker compose down` / `up`, guaranteeing ACID durability (`ADR-0003`).
 
 **Network:**
 ```yaml
@@ -2210,68 +2210,68 @@ networks:
   flowguard-network:
     driver: bridge
 ```
-Rede bridge isolada que permite comunicação inter-container por hostname (`postgres`, `backend`) sem exposição à rede host exceto pelas portas mapeadas (`5433`, `3050`).
+Isolated bridge network that allows inter-container communication by hostname (`postgres`, `backend`) without exposure to the host network except through mapped ports (`5433`, `3050`).
 
-### 29.4. Fluxo de Arranque (Boot Sequence)
+### 29.4. Boot Sequence
 
 ```text
 1. docker compose up -d
    |
-   ├─> [postgres] container inicia
-   |      └─> /docker-entrypoint-initdb.d/*.sql executa migrations 001–008
-   |      └─> Healthcheck (pg_isready) atinge estado healthy
+   ├─> [postgres] container starts
+   |      └─> /docker-entrypoint-initdb.d/*.sql runs migrations 001–008
+   |      └─> Healthcheck (pg_isready) reaches healthy state
    |
-   └─> [backend] container aguarda service_healthy do postgres
-          └─> Node.js inicia, conecta ao pg.Pool
-          └─> Servidor HTTP escuta em :3050
-          └─> Endpoint /api/v1/health disponível
+   └─> [backend] container waits for postgres service_healthy
+          └─> Node.js starts, connects to pg.Pool
+          └─> HTTP server listens on :3050
+          └─> /api/v1/health endpoint available
 ```
 
-### 29.5. Comandos Operacionais Comuns
+### 29.5. Common Operational Commands
 
-| Operação | Comando |
+| Operation | Command |
 |---|---|
-| Arrancar serviços | `docker compose up -d` |
-| Parar serviços (preserva volume) | `docker compose down` |
-| Parar e apagar volume (reset BD) | `docker compose down -v` |
-| Ver logs do backend | `docker compose logs -f backend` |
-| Ver logs do PostgreSQL | `docker compose logs -f postgres` |
-| Executar psql no container | `docker compose exec postgres psql -U flowguard_user -d flowguard_db` |
-| Rebuild do backend após alterações | `docker compose up -d --build backend` |
-| Verificar healthcheck | `docker compose ps` (coluna `STATUS` deve mostrar `healthy`) |
+| Start services | `docker compose up -d` |
+| Stop services (preserves volume) | `docker compose down` |
+| Stop and delete volume (reset DB) | `docker compose down -v` |
+| View backend logs | `docker compose logs -f backend` |
+| View PostgreSQL logs | `docker compose logs -f postgres` |
+| Run psql in the container | `docker compose exec postgres psql -U flowguard_user -d flowguard_db` |
+| Rebuild backend after changes | `docker compose up -d --build backend` |
+| Check healthcheck | `docker compose ps` (`STATUS` column should show `healthy`) |
 
-### 29.6. Integração com CI/CD (ADR-0008)
+### 29.6. CI/CD Integration (ADR-0008)
 
-Em ambiente de CI (GitHub Actions), o fluxo recomendado é:
-1. `docker compose up -d postgres` — arranca apenas o PostgreSQL para testes de integração.
-2. `npm ci && npm run build && npm test` — corre testes unitários e de integração Supertest em memória.
-3. `npx @usebruno/cli run backend/tests/bruno/FlowGuard/` — executa suites Bruno CLI contra o servidor real + BD PostgreSQL (Milestone 4).
+In a CI environment (GitHub Actions), the recommended flow is:
+1. `docker compose up -d postgres` — starts only PostgreSQL for integration tests.
+2. `npm ci && npm run build && npm test` — runs unit and in-memory Supertest integration tests.
+3. `npx @usebruno/cli run backend/tests/bruno/FlowGuard/` — executes Bruno CLI suites against the real server + PostgreSQL DB (Milestone 4).
 4. `docker compose down -v` — cleanup.
 
-> **Nota:** O backend é tipicamente construído diretamente no runner CI (não via Docker) para acelerar o feedback loop; o container `backend` do compose é usado para smoke tests end-to-end e validação do Dockerfile de produção.
+> **Note:** The backend is typically built directly on the CI runner (not via Docker) to accelerate the feedback loop; the `backend` compose container is used for end-to-end smoke tests and production Dockerfile validation.
 
 ---
 
 ## 30. Version History & Document Evolution
 
-### 30.1. Histórico de Versões da KB
+### 30.1. KB Version History
 
-| Versão | Data | Âmbito | Secções | Principais Adições |
+| Version | Date | Scope | Sections | Main Additions |
 |---|---|---|---|---|
-| **v2.2** | Outubro 2026 | Baseline original | §1–§15 | Visão de negócio, stakeholders, princípios, cenários, ADRs 0001–0008, persistência, API, testes, roadmap 20h, Domain Model, Rationale, Architecture Summary, Component/Context/Container diagrams. |
-| **v2.3** | Outubro 2026 | Extensão contratual & persistência física | §1–§27 | Contract-First methodology, RBAC matrix, DTO contracts, error envelope, boundary validation, relational mapping, DDL físico, concurrency control, ERD, CQRS views, glossary, OpenAPI summary. |
-| **v2.4** | Outubro 2026 | Extensão de roadmap detalhado & infraestrutura | §1–§30 | Roadmap detalhado de 28h em 5 milestones com deliverables granulares (§28), Docker Compose infrastructure configuration (§29), version history (§30). |
+| **v2.2** | October 2026 | Original baseline | §1–§15 | Business vision, stakeholders, principles, scenarios, ADRs 0001–0008, persistence, API, testing, 20h roadmap, Domain Model, Rationale, Architecture Summary, Component/Context/Container diagrams. |
+| **v2.3** | October 2026 | Contractual & physical persistence extension | §1–§27 | Contract-First methodology, RBAC matrix, DTO contracts, error envelope, boundary validation, relational mapping, physical DDL, concurrency control, ERD, CQRS views, glossary, OpenAPI summary. |
+| **v2.4** | October 2026 | Detailed roadmap & infrastructure extension | §1–§30 | Detailed 28h roadmap across 5 milestones with granular deliverables (§28), Docker Compose infrastructure configuration (§29), version history (§30). |
 
-### 30.2. Princípios de Evolução da KB
+### 30.2. KB Evolution Principles
 
-1. **Aditivo, nunca subtrativo:** Cada versão acrescenta informação sem remover conteúdo existente. Quando uma secção é refinada (ex: §9 → §28), a versão original permanece acessível e a nova secção é explicitamente marcada como fonte autoritária para o aspeto refinado.
-2. **Rastreabilidade explícita:** Cada nova secção documenta o ficheiro-fonte (`ROADMAP.md`, `docker-compose.yml`, `openapi.yaml`, etc.) e referencia os ADRs e secções da Master KB (`knowledge_base_esoft_eapli_arqsi.md`) que a justificam.
-3. **Versionamento semântico:** Incrementos minor (v2.3 → v2.4) refletem extensões aditivas; incrementos major (v2.x → v3.x) seriam reservados para reestruturações que quebrem compatibilidade de referências cruzadas.
-4. **Fonte de verdade única:** Em caso de conflito entre esta KB e um ficheiro do repositório (ex: `openapi.yaml` divergir de §27), o ficheiro do repositório prevalece — a KB deve ser atualizada para refletir o estado real do código.
+1. **Additive, never subtractive:** Each version adds information without removing existing content. When a section is refined (e.g., §9 → §28), the original version remains accessible and the new section is explicitly marked as the authoritative source for the refined aspect.
+2. **Explicit traceability:** Each new section documents the source file (`ROADMAP.md`, `docker-compose.yml`, `openapi.yaml`, etc.) and references the ADRs and sections of the Master KB (`knowledge_base_esoft_eapli_arqsi.md`) that justify it.
+3. **Semantic versioning:** Minor increments (v2.3 → v2.4) reflect additive extensions; major increments (v2.x → v3.x) would be reserved for restructurings that break cross-reference compatibility.
+4. **Single source of truth:** In case of conflict between this KB and a repository file (e.g., `openapi.yaml` diverging from §27), the repository file prevails — the KB must be updated to reflect the actual state of the code.
 
-### 30.3. Mapa de Correspondência KB ↔ Ficheiros do Repositório
+### 30.3. KB ↔ Repository File Correspondence Map
 
-| Secção KB | Ficheiro(s) Fonte |
+| KB Section | Source File(s) |
 |---|---|
 | §1–§15 | `knowledge_base_flowguard.md` (v2.2), ADRs 0001–0008 |
 | §16–§20 | `06-api-design-specification.md`, `openapi.yaml` |
@@ -2281,4 +2281,4 @@ Em ambiente de CI (GitHub Actions), o fluxo recomendado é:
 | §27 | `openapi.yaml` |
 | §28 | `ROADMAP.md` |
 | §29 | `docker-compose.yml` |
-| §30 | Este documento (meta-documentação) |
+| §30 | This document (meta-documentation) |
