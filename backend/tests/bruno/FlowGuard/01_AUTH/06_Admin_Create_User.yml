@@ -9,8 +9,8 @@ http:
     type: json
     data: |-
       {
-        "firstName": "Pedro",
-        "lastName": "Ribeiro",
+        "firstName": "Alice",
+        "lastName": "Smith",
         "email": "eng-{{$timestamp}}@flowguard.industrial",
         "password": "Password123!",
         "roles": ["ENGINEER"]

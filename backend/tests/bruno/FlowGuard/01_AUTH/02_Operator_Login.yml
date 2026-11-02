@@ -9,7 +9,7 @@ http:
     type: json
     data: |-
       {
-        "email": "op.silva@flowguard.industrial",
+        "email": "bob.johnson@flowguard.industrial",
         "password": "FlowGuard#2026!"
       }
   auth:
