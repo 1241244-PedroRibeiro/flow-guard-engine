@@ -1,0 +1,24 @@
+info:
+  name: 06 Cleanup
+  type: http
+  seq: 6
+http:
+  method: DELETE
+  url: '{{baseUrl}}/conveyor-lines/{{testLineId}}'
+  auth:
+    type: bearer
+    token: '{{adminToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status 204 No Content", function() {
+          expect(res.getStatus()).to.equal(204);
+        });
+        // Depois de apagar a linha, o setor pode ser apagado
+        const sectorDelete = await bru.sendRequest({
+          method: 'DELETE',
+          url: `${bru.getEnvVar('baseUrl')}/plant-sectors/${bru.getEnvVar('testSectorId')}`,
+          headers: { Authorization: `Bearer ${bru.getEnvVar('adminToken')}` }
+        });
+        expect(sectorDelete.status).to.equal(204);

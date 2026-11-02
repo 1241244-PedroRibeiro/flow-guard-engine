@@ -18,8 +18,8 @@ runtime:
   scripts:
     - type: tests
       code: |-
-        test("Operator login returns 201 CREATED and Bearer token", function() {
-        	expect(res.getStatus()).to.equal(201);
+        test("Operator login returns 200 OK and Bearer token", function() {
+        	expect(res.getStatus()).to.equal(200);
         	const data = res.getBody();
         	bru.setEnvVar("operatorToken", data.accessToken);
         });

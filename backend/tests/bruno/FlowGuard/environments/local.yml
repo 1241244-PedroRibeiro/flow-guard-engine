@@ -3,14 +3,20 @@ variables:
   - name: baseUrl
     value: http://localhost:3050/api/v1
   - name: adminToken
-    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMTExMTExMS0xMTExLTQxMTEtODExMS0xMTExMTExMTExMDEiLCJlbWFpbCI6ImFkbWluQGZsb3dndWFyZC5pbmR1c3RyaWFsIiwicm9sZXMiOlsiQURNSU5JU1RSQVRPUiJdLCJpYXQiOjE3OTM1NzY0MzksImV4cCI6MTc5MzYwNTIzOX0.Ptpf0uIHp3E8steAJs7pNAhrbRbzcADgA5UQIg8MlV0
+    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMTExMTExMS0xMTExLTQxMTEtODExMS0xMTExMTExMTExMDEiLCJlbWFpbCI6ImFkbWluQGZsb3dndWFyZC5pbmR1c3RyaWFsIiwicm9sZXMiOlsiQURNSU5JU1RSQVRPUiJdLCJpYXQiOjE3OTM2MTAwNzEsImV4cCI6MTc5MzYzODg3MX0.PQsmjGKZyD8Oic-506b2o36mze6eAksyQxX7pfsoQSU
   - name: testUserId
     value: baaaa956-6f66-4f1f-ab1e-87a1bebe817b
   - name: newUserId
-    value: 4f075a4b-2680-481e-8086-9bce8d1107e0
+    value: 58f5512d-7019-41f6-b956-6c4a5d7249f7
   - name: operatorToken
-    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzMzMzMzMzMy0zMzMzLTQzMzMtODMzMy0zMzMzMzMzMzMzMDMiLCJlbWFpbCI6Im9wLnNpbHZhQGZsb3dndWFyZC5pbmR1c3RyaWFsIiwicm9sZXMiOlsiT1BFUkFUT1IiXSwiaWF0IjoxNzkzNTc2NDM5LCJleHAiOjE3OTM2MDUyMzl9.4mGwPY6RL0QEwLcmNzkzKG6fLYDvDPxLXbtrpGDW7Gs
+    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzMzMzMzMzMy0zMzMzLTQzMzMtODMzMy0zMzMzMzMzMzMzMDMiLCJlbWFpbCI6Im9wLnNpbHZhQGZsb3dndWFyZC5pbmR1c3RyaWFsIiwicm9sZXMiOlsiT1BFUkFUT1IiXSwiaWF0IjoxNzkzNjEwMDcxLCJleHAiOjE3OTM2Mzg4NzF9.66G20LPgOAyyyD0x3S-rjmMue43iFRkhVC7ZhIIEBzE
   - name: hackerEmail
-    value: hacker-1793576440@flowguard.industrial
+    value: hacker-1793610072@flowguard.industrial
   - name: staffEmail
-    value: eng-1793576440@flowguard.industrial
+    value: eng-1793610072@flowguard.industrial
+  - name: testSectorId
+    value: 2bff3702-f199-49d3-8de4-4910bee077cf
+  - name: testSectorCode
+    value: SEC-TEST-840
+  - name: testLineId
+    value: ef1ba833-88d6-4dae-a659-179deead9578

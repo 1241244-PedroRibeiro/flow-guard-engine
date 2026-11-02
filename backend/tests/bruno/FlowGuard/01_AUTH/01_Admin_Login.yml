@@ -18,8 +18,8 @@ runtime:
   scripts:
     - type: tests
       code: |-
-        test("AC1 - Admin login returns 201 CREATED and Bearer token", function() {
-        	expect(res.getStatus()).to.equal(201);
+        test("AC1 - Admin login returns 200 OK and Bearer token", function() {
+        	expect(res.getStatus()).to.equal(200);
         	const data = res.getBody();
         	expect(data.tokenType).to.equal("Bearer");
         	expect(data.accessToken).to.be.a("string");
