@@ -1,0 +1,29 @@
+info:
+  name: "21 · AC2 · sensorId inexistente → 404"
+  type: http
+  seq: 25
+http:
+  method: PUT
+  url: "{{baseUrl}}/sensor-nodes/00000000-0000-0000-0000-000000000000/threshold-rule"
+  headers:
+    - name: Authorization
+      value: "Bearer {{engineerToken}}"
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |
+      {
+        "warningLimit": 1.0,
+        "criticalLimit": 2.0,
+        "unit": "mm/s",
+        "windowSizeSamples": 32
+      }
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("404 Not Found", function() {
+          expect(res.getStatus()).to.equal(404);
+          expect(res.getBody().message).to.include("SensorNode");
+        });

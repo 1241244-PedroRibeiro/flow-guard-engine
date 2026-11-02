@@ -2,21 +2,45 @@ name: local
 variables:
   - name: baseUrl
     value: http://localhost:3050/api/v1
+  - name: adminEmail
+    value: admin@flowguard.industrial
+  - name: adminPassword
+    value: FlowGuard#2026!
+  - name: engineerEmail
+    value: eng.ribeiro@flowguard.industrial
+  - name: engineerPassword
+    value: FlowGuard#2026!
+  - name: operatorEmail
+    value: op.silva@flowguard.industrial
+  - name: operatorPassword
+    value: FlowGuard#2026!
   - name: adminToken
-    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMTExMTExMS0xMTExLTQxMTEtODExMS0xMTExMTExMTExMDEiLCJlbWFpbCI6ImFkbWluQGZsb3dndWFyZC5pbmR1c3RyaWFsIiwicm9sZXMiOlsiQURNSU5JU1RSQVRPUiJdLCJpYXQiOjE3OTM2MTAwNzEsImV4cCI6MTc5MzYzODg3MX0.PQsmjGKZyD8Oic-506b2o36mze6eAksyQxX7pfsoQSU
-  - name: testUserId
-    value: baaaa956-6f66-4f1f-ab1e-87a1bebe817b
-  - name: newUserId
-    value: 58f5512d-7019-41f6-b956-6c4a5d7249f7
+    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMTExMTExMS0xMTExLTQxMTEtODExMS0xMTExMTExMTExMDEiLCJlbWFpbCI6ImFkbWluQGZsb3dndWFyZC5pbmR1c3RyaWFsIiwicm9sZXMiOlsiQURNSU5JU1RSQVRPUiJdLCJpYXQiOjE3OTM2MzMyMjMsImV4cCI6MTc5MzY2MjAyM30.4SJqdy5cFQwk-si_NrbxgDywtyhkvJRuwQI2teh_Fuo
   - name: operatorToken
-    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzMzMzMzMzMy0zMzMzLTQzMzMtODMzMy0zMzMzMzMzMzMzMDMiLCJlbWFpbCI6Im9wLnNpbHZhQGZsb3dndWFyZC5pbmR1c3RyaWFsIiwicm9sZXMiOlsiT1BFUkFUT1IiXSwiaWF0IjoxNzkzNjEwMDcxLCJleHAiOjE3OTM2Mzg4NzF9.66G20LPgOAyyyD0x3S-rjmMue43iFRkhVC7ZhIIEBzE
+    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzMzMzMzMzMy0zMzMzLTQzMzMtODMzMy0zMzMzMzMzMzMzMDMiLCJlbWFpbCI6Im9wLnNpbHZhQGZsb3dndWFyZC5pbmR1c3RyaWFsIiwicm9sZXMiOlsiT1BFUkFUT1IiXSwiaWF0IjoxNzkzNjMzMjIzLCJleHAiOjE3OTM2NjIwMjN9.oC5ov9lC0_xjdH5lUWWaR2lR-KeTjk_DcIevlT8rHTk
   - name: hackerEmail
-    value: hacker-1793610072@flowguard.industrial
+    value: hacker-1793631143@flowguard.industrial
+  - name: newUserId
+    value: 91a78b6e-40ff-46f2-9314-bf8b5557f02b
   - name: staffEmail
-    value: eng-1793610072@flowguard.industrial
+    value: eng-1793631144@flowguard.industrial
   - name: testSectorId
-    value: 2bff3702-f199-49d3-8de4-4910bee077cf
+    value: 006ae5a8-8bb0-4e74-96bc-cf3e3dd77e17
   - name: testSectorCode
-    value: SEC-TEST-840
+    value: SEC-TEST-59
   - name: testLineId
-    value: ef1ba833-88d6-4dae-a659-179deead9578
+    value: f87afb5d-e94b-4e04-9dd6-3e272a31afbf
+  - name: engineerToken
+    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyMjIyMjIyMi0yMjIyLTQyMjItODIyMi0yMjIyMjIyMjIyMDIiLCJlbWFpbCI6ImVuZy5yaWJlaXJvQGZsb3dndWFyZC5pbmR1c3RyaWFsIiwicm9sZXMiOlsiRU5HSU5FRVIiXSwiaWF0IjoxNzkzNjMzMjIzLCJleHAiOjE3OTM2NjIwMjN9.QD7QZAxX_9vpLM4s7DgEJaiiKh_owtf_asoa2cHUVzI
+  - name: fg03SectorId
+    value: c33f6908-659f-4299-88e0-065029c9c3f5
+  - name: runId
+    value: "1793633223229"
+  - name: fg03LineId
+    value: f78f3d01-c3ab-4a80-8550-2178e9a92ffb
+  - name: sensorPrimaryId
+    value: 874ff225-8d96-49f6-ad4b-ba873def43da
+  - name: sensorAdminId
+    value: a2b9e37c-c10a-48bc-8bf3-ab8aabfcb3fd
+  - name: sensorDeactivateId
+    value: 1619cbbb-00fa-4883-9c73-96dd4289b2bb

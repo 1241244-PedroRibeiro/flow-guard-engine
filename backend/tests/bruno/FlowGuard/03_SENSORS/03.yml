@@ -1,0 +1,28 @@
+info:
+  name: "03 · AC4 · Register Sensor for deactivation tests → 201"
+  type: http
+  seq: 7
+http:
+  method: POST
+  url: "{{baseUrl}}/sensor-nodes"
+  headers:
+    - name: Authorization
+      value: "Bearer {{engineerToken}}"
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |
+      {
+        "lineId": "{{fg03LineId}}",
+        "serialNumber": "SN-FG03-{{runId}}-DEA",
+        "sensorType": "MOTOR_VIBRATION"
+      }
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("201 Created", function() {
+          expect(res.getStatus()).to.equal(201);
+          bru.setEnvVar("sensorDeactivateId", res.getBody().id);
+        });

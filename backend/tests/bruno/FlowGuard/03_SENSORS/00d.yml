@@ -1,0 +1,31 @@
+info:
+  name: "00d · Setup · Create isolated ConveyorLine"
+  type: http
+  seq: 4
+http:
+  method: POST
+  url: "{{baseUrl}}/conveyor-lines"
+  headers:
+    - name: Authorization
+      value: "Bearer {{engineerToken}}"
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |
+      {
+        "sectorId": "{{fg03SectorId}}",
+        "lineCode": "LINE-FG03-{{runId}}",
+        "name": "FG03 Sensors Test Line",
+        "description": "Isolated line for US FG03 Bruno suite"
+      }
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("201 Created", function() {
+          expect(res.getStatus()).to.equal(201);
+          const body = res.getBody();
+          expect(body.lineCode).to.equal(`LINE-FG03-${bru.getEnvVar("runId")}`);
+          bru.setEnvVar("fg03LineId", body.id);
+        });

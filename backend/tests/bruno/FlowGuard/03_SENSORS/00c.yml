@@ -1,0 +1,30 @@
+info:
+  name: "00c · Setup · Create isolated PlantSector"
+  type: http
+  seq: 3
+http:
+  method: POST
+  url: "{{baseUrl}}/plant-sectors"
+  headers:
+    - name: Authorization
+      value: "Bearer {{engineerToken}}"
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |
+      {
+        "sectorCode": "SEC-FG03-{{runId}}",
+        "name": "FG03 Sensors Test Sector",
+        "description": "Isolated sector for US FG03 Bruno suite"
+      }
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("201 Created", function() {
+          expect(res.getStatus()).to.equal(201);
+          const body = res.getBody();
+          expect(body.sectorCode).to.equal(`SEC-FG03-${bru.getEnvVar("runId")}`);
+          bru.setEnvVar("fg03SectorId", body.id);
+        });

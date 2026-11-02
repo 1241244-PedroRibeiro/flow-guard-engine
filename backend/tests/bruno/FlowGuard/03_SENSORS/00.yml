@@ -1,0 +1,30 @@
+info:
+  name: "00 · Login Admin"
+  type: http
+  seq: 0
+http:
+  method: POST
+  url: "{{baseUrl}}/auth/login"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |
+      {
+        "email": "{{adminEmail}}",
+        "password": "{{adminPassword}}"
+      }
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        bru.setEnvVar("runId", Date.now().toString());
+        test("200 OK", function() {
+          expect(res.getStatus()).to.equal(200);
+        });
+        test("returns accessToken", function() {
+          const body = res.getBody();
+          expect(body.accessToken).to.be.a("string");
+          bru.setEnvVar("adminToken", body.accessToken);
+        });

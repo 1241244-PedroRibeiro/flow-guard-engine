@@ -1,0 +1,30 @@
+info:
+  name: "00a · Login Engineer"
+  type: http
+  seq: 1
+http:
+  method: POST
+  url: "{{baseUrl}}/auth/login"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |
+      {
+        "email": "{{engineerEmail}}",
+        "password": "{{engineerPassword}}"
+      }
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("200 OK", function() {
+          expect(res.getStatus()).to.equal(200);
+        });
+        test("returns accessToken", function() {
+          const body = res.getBody();
+          expect(body.accessToken).to.be.a("string");
+          expect(body.user.roles).to.include("ENGINEER");
+          bru.setEnvVar("engineerToken", body.accessToken);
+        });

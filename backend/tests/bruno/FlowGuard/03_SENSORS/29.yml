@@ -1,0 +1,18 @@
+info:
+  name: "29 · AC4 · Deactivate already-inactive sensor → 422"
+  type: http
+  seq: 33
+http:
+  method: PATCH
+  url: "{{baseUrl}}/sensor-nodes/{{sensorDeactivateId}}/deactivate"
+  headers:
+    - name: Authorization
+      value: "Bearer {{engineerToken}}"
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("422 Unprocessable Entity (idempotency violation)", function() {
+          expect(res.getStatus()).to.equal(422);
+          expect(res.getBody().message).to.include("already inactive");
+        });

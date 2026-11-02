@@ -1,0 +1,28 @@
+info:
+  name: "04 · AC1 · RBAC · OPERATOR cannot register sensor → 403"
+  type: http
+  seq: 8
+http:
+  method: POST
+  url: "{{baseUrl}}/sensor-nodes"
+  headers:
+    - name: Authorization
+      value: "Bearer {{operatorToken}}"
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |
+      {
+        "lineId": "{{fg03LineId}}",
+        "serialNumber": "SN-FG03-{{runId}}-OPR",
+        "sensorType": "MOTOR_VIBRATION"
+      }
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("403 Forbidden (RBAC block)", function() {
+          expect(res.getStatus()).to.equal(403);
+          expect(res.getBody().id).to.equal(undefined);
+        });

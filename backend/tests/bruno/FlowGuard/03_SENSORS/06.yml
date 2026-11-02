@@ -1,0 +1,27 @@
+info:
+  name: "06 · AC1 · Malformed JWT → 401"
+  type: http
+  seq: 10
+http:
+  method: POST
+  url: "{{baseUrl}}/sensor-nodes"
+  headers:
+    - name: Authorization
+      value: "Bearer eyJhbGciOiJIUzI1NiJ9.invalid.signature"
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |
+      {
+        "lineId": "{{fg03LineId}}",
+        "serialNumber": "SN-FG03-{{runId}}-BADTOKEN",
+        "sensorType": "MOTOR_VIBRATION"
+      }
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("401 Unauthorized", function() {
+          expect(res.getStatus()).to.equal(401);
+        });

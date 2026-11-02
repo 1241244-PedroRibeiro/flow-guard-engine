@@ -1,0 +1,28 @@
+info:
+  name: "07 · AC1 · lineId inexistente → 404"
+  type: http
+  seq: 11
+http:
+  method: POST
+  url: "{{baseUrl}}/sensor-nodes"
+  headers:
+    - name: Authorization
+      value: "Bearer {{engineerToken}}"
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |
+      {
+        "lineId": "00000000-0000-0000-0000-000000000000",
+        "serialNumber": "SN-FG03-{{runId}}-NOLINE",
+        "sensorType": "MOTOR_VIBRATION"
+      }
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("404 Not Found", function() {
+          expect(res.getStatus()).to.equal(404);
+          expect(res.getBody().message).to.include("ConveyorLine");
+        });

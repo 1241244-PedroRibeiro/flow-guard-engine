@@ -1,0 +1,17 @@
+info:
+  name: "30 · AC4 · Deactivate inexistente → 404"
+  type: http
+  seq: 34
+http:
+  method: PATCH
+  url: "{{baseUrl}}/sensor-nodes/00000000-0000-0000-0000-000000000000/deactivate"
+  headers:
+    - name: Authorization
+      value: "Bearer {{engineerToken}}"
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("404 Not Found", function() {
+          expect(res.getStatus()).to.equal(404);
+        });
