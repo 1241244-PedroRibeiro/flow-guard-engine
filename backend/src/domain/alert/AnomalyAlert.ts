@@ -1,6 +1,7 @@
 import { AlertSeverity } from './AlertSeverity';
 import { AlertStatus } from './AlertStatus';
 import { DomainInvariantException } from '../common/exceptions/DomainInvariantException';
+import { ResourceConflictException } from '../common/exceptions/ResourceConflictException';
 
 export interface AnomalyAlertProps {
   id: string;
@@ -17,10 +18,6 @@ export interface AnomalyAlertProps {
   resolvedAt: Date | null;
 }
 
-/**
- * Aggregate Root: AnomalyAlert (KB §10.2, §22.4)
- * Lifecycle: OPEN → ACKNOWLEDGED → RESOLVED
- */
 export class AnomalyAlert {
   private constructor(private readonly props: AnomalyAlertProps) {}
 
@@ -59,18 +56,25 @@ export class AnomalyAlert {
 
   acknowledge(userId: string, note: string): void {
     if (this.props.status !== AlertStatus.OPEN) {
-      throw new DomainInvariantException(`Cannot acknowledge alert in status ${this.props.status}.`);
+      throw new ResourceConflictException(`Cannot acknowledge alert in status ${this.props.status}. Only OPEN alerts can be acknowledged.`);
     }
-    if (!userId) throw new DomainInvariantException('acknowledgedBy is required.');
+    if (!userId) {
+      throw new DomainInvariantException('acknowledgedBy is required.');
+    }
+    const trimmedNote = note?.trim() ?? '';
+    if (trimmedNote.length < 3 || trimmedNote.length > 500) {
+      throw new DomainInvariantException('Diagnostic note must be between 3 and 500 characters.');
+    }
+
     this.props.status = AlertStatus.ACKNOWLEDGED;
     this.props.acknowledgedBy = userId;
     this.props.acknowledgedAt = new Date();
-    this.props.diagnosticNote = note;
+    this.props.diagnosticNote = trimmedNote;
   }
 
   resolve(): void {
     if (this.props.status !== AlertStatus.ACKNOWLEDGED) {
-      throw new DomainInvariantException(`Cannot resolve alert in status ${this.props.status}.`);
+      throw new ResourceConflictException(`Cannot resolve alert in status ${this.props.status}. Alert must be ACKNOWLEDGED before resolution.`);
     }
     this.props.status = AlertStatus.RESOLVED;
     this.props.resolvedAt = new Date();
