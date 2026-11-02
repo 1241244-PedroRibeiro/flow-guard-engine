@@ -11,8 +11,12 @@ import { JwtTokenService } from '../infrastructure/security/JwtTokenService';
 import { JwtAuthGuard } from './http/guards/JwtAuthGuard';
 import { RolesGuard } from './http/guards/RolesGuard';
 import { pool } from '../infrastructure/persistence/connection';
+import { TopologyModule } from './topology.module';
 
 @Module({
+  imports: [
+    TopologyModule, // <-- Adicionado aqui
+  ],
   controllers: [HealthController, AuthController, UserController],
   providers: [
     {
