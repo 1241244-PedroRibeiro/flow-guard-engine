@@ -1,6 +1,7 @@
 import { AnomalyAlert } from '../../../../src/domain/alert/AnomalyAlert';
 import { AlertSeverity } from '../../../../src/domain/alert/AlertSeverity';
 import { AlertStatus } from '../../../../src/domain/alert/AlertStatus';
+import { ResourceConflictException } from '../../../../src/domain/common/exceptions/ResourceConflictException';
 import { DomainInvariantException } from '../../../../src/domain/common/exceptions/DomainInvariantException';
 
 const make = () =>
@@ -20,28 +21,40 @@ describe('AnomalyAlert', () => {
 
   it('acknowledge() sets status and user', () => {
     const a = make();
-    a.acknowledge('u1', 'checked');
+    a.acknowledge('u1', 'Checking motor');
     expect(a.status).toBe(AlertStatus.ACKNOWLEDGED);
     expect(a.acknowledgedBy).toBe('u1');
-    expect(a.diagnosticNote).toBe('checked');
+    expect(a.diagnosticNote).toBe('Checking motor');
   });
 
-  it('rejects resolve without acknowledgement', () => {
+  it('rejects diagnostic note shorter than 3 chars', () => {
     const a = make();
-    expect(() => a.resolve()).toThrow(DomainInvariantException);
+    expect(() => a.acknowledge('u1', 'ok')).toThrow(DomainInvariantException);
+  });
+
+  it('rejects acknowledge on already-acknowledged alert (409 Conflict)', () => {
+    const a = make();
+    a.acknowledge('u1', 'Checked');
+    expect(() => a.acknowledge('u2', 'Checking again')).toThrow(ResourceConflictException);
+  });
+
+  it('rejects resolve without acknowledgement (409 Conflict)', () => {
+    const a = make();
+    expect(() => a.resolve()).toThrow(ResourceConflictException);
   });
 
   it('resolve() after acknowledge reaches RESOLVED', () => {
     const a = make();
-    a.acknowledge('u1', 'ok');
+    a.acknowledge('u1', 'Checked');
     a.resolve();
     expect(a.status).toBe(AlertStatus.RESOLVED);
     expect(a.resolvedAt).not.toBeNull();
   });
 
-  it('rejects acknowledge on already-acknowledged alert', () => {
+  it('rejects resolve on already-resolved alert (409 Conflict)', () => {
     const a = make();
-    a.acknowledge('u1', 'ok');
-    expect(() => a.acknowledge('u2', 'again')).toThrow(DomainInvariantException);
+    a.acknowledge('u1', 'Checked');
+    a.resolve();
+    expect(() => a.resolve()).toThrow(ResourceConflictException);
   });
 });
