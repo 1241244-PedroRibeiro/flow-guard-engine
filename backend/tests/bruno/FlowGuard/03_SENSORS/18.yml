@@ -1,0 +1,29 @@
+info:
+  name: "18 · AC2 · windowSizeSamples = 129 (> 128) → 422"
+  type: http
+  seq: 22
+http:
+  method: PUT
+  url: "{{baseUrl}}/sensor-nodes/{{sensorPrimaryId}}/threshold-rule"
+  headers:
+    - name: Authorization
+      value: "Bearer {{engineerToken}}"
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |
+      {
+        "warningLimit": 1.0,
+        "criticalLimit": 2.0,
+        "unit": "mm/s",
+        "windowSizeSamples": 129
+      }
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("422 Unprocessable Entity", function() {
+          expect(res.getStatus()).to.equal(422);
+          expect(res.getBody().message).to.include("between 3 and 128");
+        });

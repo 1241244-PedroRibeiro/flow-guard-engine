@@ -1,0 +1,30 @@
+info:
+  name: "02 · AC1 · Register Sensor (ADMINISTRATOR) → 201"
+  type: http
+  seq: 6
+http:
+  method: POST
+  url: "{{baseUrl}}/sensor-nodes"
+  headers:
+    - name: Authorization
+      value: "Bearer {{adminToken}}"
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |
+      {
+        "lineId": "{{fg03LineId}}",
+        "serialNumber": "SN-FG03-{{runId}}-ADM",
+        "sensorType": "BELT_VELOCITY"
+      }
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("201 Created (ADMIN can register)", function() {
+          expect(res.getStatus()).to.equal(201);
+          const body = res.getBody();
+          expect(body.sensorType).to.equal("BELT_VELOCITY");
+          bru.setEnvVar("sensorAdminId", body.id);
+        });

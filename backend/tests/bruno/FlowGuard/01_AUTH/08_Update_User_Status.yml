@@ -1,0 +1,30 @@
+info:
+  name: 08 Admin Update User Status
+  type: http
+  seq: 8
+http:
+  method: PATCH
+  url: '{{baseUrl}}/users/{{newUserId}}/status'
+  body:
+    type: json
+    data: |-
+      {
+        "status": "DEACTIVATED"
+      }
+  auth:
+    type: bearer
+    token: '{{adminToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("AC4 - Admin deactivates user successfully with 200 OK", function() {
+        	expect(res.getStatus()).to.equal(200);
+        	const data = res.getBody();
+        	expect(data.status).to.equal("DEACTIVATED");
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -1,0 +1,32 @@
+info:
+  name: "14 · AC2 · Upsert Threshold Rule (update) → 200, version increment"
+  type: http
+  seq: 18
+http:
+  method: PUT
+  url: "{{baseUrl}}/sensor-nodes/{{sensorPrimaryId}}/threshold-rule"
+  headers:
+    - name: Authorization
+      value: "Bearer {{engineerToken}}"
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |
+      {
+        "warningLimit": 3.0,
+        "criticalLimit": 6.0,
+        "unit": "mm/s",
+        "windowSizeSamples": 64
+      }
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("200 OK", function() {
+          expect(res.getStatus()).to.equal(200);
+          const body = res.getBody();
+          expect(body.warningLimit).to.equal(3.0);
+          expect(body.windowSizeSamples).to.equal(64);
+          expect(body.version).to.equal(2);
+        });

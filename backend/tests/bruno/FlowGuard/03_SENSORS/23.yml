@@ -1,0 +1,30 @@
+info:
+  name: "23 · AC3 · List filtered by lineId (exact count) → 200"
+  type: http
+  seq: 27
+http:
+  method: GET
+  url: "{{baseUrl}}/sensor-nodes?lineId={{fg03LineId}}"
+  headers:
+    - name: Authorization
+      value: "Bearer {{engineerToken}}"
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("200 OK", function() {
+          expect(res.getStatus()).to.equal(200);
+          expect(res.getBody().length).to.equal(3);
+          res.getBody().forEach(function(s) {
+            expect(s.lineId).to.equal(bru.getEnvVar("fg03LineId"));
+          });
+        });
+        test("primary sensor included and has thresholdRule", function() {
+          const primary = res.getBody().find(function(s) { return s.id === bru.getEnvVar("sensorPrimaryId"); });
+          expect(primary).to.be.ok;
+          expect(primary.thresholdRule).to.be.ok;
+          expect(primary.thresholdRule.warningLimit).to.equal(3.0);
+          expect(primary.thresholdRule.criticalLimit).to.equal(6.0);
+          expect(primary.thresholdRule.windowSizeSamples).to.equal(64);
+          expect(primary.thresholdRule.version).to.equal(2);
+        });

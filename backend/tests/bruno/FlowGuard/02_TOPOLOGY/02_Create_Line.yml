@@ -1,0 +1,26 @@
+info:
+  name: 02 Create Conveyor Line
+  type: http
+  seq: 2
+http:
+  method: POST
+  url: '{{baseUrl}}/conveyor-lines'
+  body:
+    type: json
+    data: |-
+      {
+        "sectorId": "{{testSectorId}}",
+        "lineCode": "LINE-TEST-{{$randomInt}}",
+        "name": "Automated Test Line"
+      }
+  auth:
+    type: bearer
+    token: '{{adminToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status 201 Created", function() {
+          expect(res.getStatus()).to.equal(201);
+        });
+        bru.setEnvVar("testLineId", res.getBody().id);

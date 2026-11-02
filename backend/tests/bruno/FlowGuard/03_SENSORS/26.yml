@@ -1,0 +1,23 @@
+info:
+  name: "26 · AC3 · List combined filters (lineId + type + isActive) → 200"
+  type: http
+  seq: 30
+http:
+  method: GET
+  url: "{{baseUrl}}/sensor-nodes?lineId={{fg03LineId}}&sensorType=MOTOR_VIBRATION&isActive=true"
+  headers:
+    - name: Authorization
+      value: "Bearer {{engineerToken}}"
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("200 OK", function() {
+          expect(res.getStatus()).to.equal(200);
+          expect(res.getBody().length).to.equal(2);
+          res.getBody().forEach(function(s) {
+            expect(s.lineId).to.equal(bru.getEnvVar("fg03LineId"));
+            expect(s.sensorType).to.equal("MOTOR_VIBRATION");
+            expect(s.isActive).to.equal(true);
+          });
+        });

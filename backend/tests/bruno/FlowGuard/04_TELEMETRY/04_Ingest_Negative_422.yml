@@ -1,0 +1,21 @@
+info:
+  name: FG04 Ingest Telemetry — 422 on negative vibration
+  type: http
+  seq: 4
+http:
+  method: POST
+  url: '{{baseUrl}}/sensor-nodes/{{sensorPrimaryId}}/telemetry-readings'
+  body:
+    type: json
+    data: |-
+      { "rawValue": -1.0, "unit": "mm/s" }
+  auth:
+    type: bearer
+    token: '{{adminToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("AC3 — 422 for physically implausible value", function() {
+          expect(res.getStatus()).to.equal(422);
+        });

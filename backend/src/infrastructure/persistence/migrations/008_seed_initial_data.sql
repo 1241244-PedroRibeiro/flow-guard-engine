@@ -5,9 +5,9 @@ BEGIN;
 -- Argon2id hash generated with memoryCost=65536, timeCost=3, parallelism=1
 INSERT INTO users (id, first_name, last_name, email, password_hash, status)
 VALUES
-    ('11111111-1111-4111-8111-111111111101', 'System', 'Administrator', 'admin@flowguard.industrial', '$argon2id$v=19$m=65536,t=3,p=1$c2FsdGhlcmVmbG93Z3VhcmQ$7K8vM9xN2pL4qR6sT0uV1wX3yZ5aB7cD9eF1gH3iJ5k', 'ACTIVE'),
-    ('22222222-2222-4222-8222-222222222202', 'Pedro', 'Ribeiro', 'eng.ribeiro@flowguard.industrial', '$argon2id$v=19$m=65536,t=3,p=1$c2FsdGhlcmVmbG93Z3VhcmQ$7K8vM9xN2pL4qR6sT0uV1wX3yZ5aB7cD9eF1gH3iJ5k', 'ACTIVE'),
-    ('33333333-3333-4333-8333-333333333303', 'Mariana', 'Silva', 'op.silva@flowguard.industrial', '$argon2id$v=19$m=65536,t=3,p=1$c2FsdGhlcmVmbG93Z3VhcmQ$7K8vM9xN2pL4qR6sT0uV1wX3yZ5aB7cD9eF1gH3iJ5k', 'ACTIVE')
+    ('11111111-1111-4111-8111-111111111101', 'System', 'Administrator', 'admin@flowguard.industrial', '$argon2id$v=19$m=65536,t=3,p=1$uu1vKwzYqGBz0g5aeZO9hQ$A4SHt8mdOc9u4BNNyYl+w5XeG3b/XtumhELfTKdePFo', 'ACTIVE'),
+    ('22222222-2222-4222-8222-222222222202', 'Alice', 'Smith', 'alice.smith@flowguard.industrial', '$argon2id$v=19$m=65536,t=3,p=1$uu1vKwzYqGBz0g5aeZO9hQ$A4SHt8mdOc9u4BNNyYl+w5XeG3b/XtumhELfTKdePFo', 'ACTIVE'),
+    ('33333333-3333-4333-8333-333333333303', 'Bob', 'Johnson', 'bob.johnson@flowguard.industrial', '$argon2id$v=19$m=65536,t=3,p=1$uu1vKwzYqGBz0g5aeZO9hQ$A4SHt8mdOc9u4BNNyYl+w5XeG3b/XtumhELfTKdePFo', 'ACTIVE')
 ON CONFLICT DO NOTHING;
 
 INSERT INTO user_roles (user_id, role)

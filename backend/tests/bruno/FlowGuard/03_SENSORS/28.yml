@@ -1,0 +1,17 @@
+info:
+  name: "28 · AC4 · RBAC · OPERATOR cannot deactivate sensor → 403"
+  type: http
+  seq: 32
+http:
+  method: PATCH
+  url: "{{baseUrl}}/sensor-nodes/{{sensorPrimaryId}}/deactivate"
+  headers:
+    - name: Authorization
+      value: "Bearer {{operatorToken}}"
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("403 Forbidden", function() {
+          expect(res.getStatus()).to.equal(403);
+        });

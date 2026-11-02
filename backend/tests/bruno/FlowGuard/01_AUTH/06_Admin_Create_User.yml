@@ -1,0 +1,37 @@
+info:
+  name: 06 Admin Create Staff User
+  type: http
+  seq: 6
+http:
+  method: POST
+  url: '{{baseUrl}}/users'
+  body:
+    type: json
+    data: |-
+      {
+        "firstName": "Alice",
+        "lastName": "Smith",
+        "email": "eng-{{$timestamp}}@flowguard.industrial",
+        "password": "Password123!",
+        "roles": ["ENGINEER"]
+      }
+  auth:
+    type: bearer
+    token: '{{adminToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("AC4 - Admin creates active user with 201 Created", function() {
+        	expect(res.getStatus()).to.equal(201);
+        	const data = res.getBody();
+        	expect(data.status).to.equal("ACTIVE");
+        	expect(data.roles).to.deep.equal(["ENGINEER"]);
+        	bru.setEnvVar("newUserId", data.id);
+        	bru.setEnvVar("staffEmail", data.email);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

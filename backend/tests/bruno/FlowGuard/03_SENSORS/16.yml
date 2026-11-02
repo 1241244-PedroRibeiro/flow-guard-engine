@@ -1,0 +1,29 @@
+info:
+  name: "16 · AC2 · criticalLimit < warningLimit → 422"
+  type: http
+  seq: 20
+http:
+  method: PUT
+  url: "{{baseUrl}}/sensor-nodes/{{sensorPrimaryId}}/threshold-rule"
+  headers:
+    - name: Authorization
+      value: "Bearer {{engineerToken}}"
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |
+      {
+        "warningLimit": 8.0,
+        "criticalLimit": 6.0,
+        "unit": "mm/s",
+        "windowSizeSamples": 32
+      }
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("422 Unprocessable Entity", function() {
+          expect(res.getStatus()).to.equal(422);
+          expect(res.getBody().message).to.include("strictly greater");
+        });

@@ -1,0 +1,17 @@
+info:
+  name: FG05 Resolve Conflict (409)
+  type: http
+  seq: 6
+http:
+  method: POST
+  url: '{{baseUrl}}/anomaly-alerts/{{openAlertId}}/resolve'
+  auth:
+    type: bearer
+    token: '{{engineerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("AC4 — 409 Conflict on second resolve", function() {
+          expect(res.getStatus()).to.equal(409);
+        });

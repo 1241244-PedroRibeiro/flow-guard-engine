@@ -1,0 +1,21 @@
+info:
+  name: FG06 Consume Insufficient Stock (422)
+  type: http
+  seq: 3
+http:
+  method: POST
+  url: '{{baseUrl}}/spare-parts/{{sparePartId}}/consume'
+  body:
+    type: json
+    data: |-
+      { "units": 99, "reason": "Too much" }
+  auth:
+    type: bearer
+    token: '{{operatorToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("AC2 — 422 Unprocessable Entity", function() {
+          expect(res.getStatus()).to.equal(422);
+        });

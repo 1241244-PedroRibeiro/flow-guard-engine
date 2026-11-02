@@ -1,0 +1,27 @@
+info:
+  name: 04 Update Line Status & Version
+  type: http
+  seq: 4
+http:
+  method: PATCH
+  url: '{{baseUrl}}/conveyor-lines/{{testLineId}}/operational-status'
+  body:
+    type: json
+    data: |-
+      {
+        "operationalStatus": "MAINTENANCE",
+        "expectedVersion": 1,
+        "reason": "Routine maintenance"
+      }
+  auth:
+    type: bearer
+    token: '{{adminToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status 200 OK", function() {
+          expect(res.getStatus()).to.equal(200);
+          expect(res.getBody().operationalStatus).to.equal("MAINTENANCE");
+          expect(res.getBody().version).to.equal(2);
+        });

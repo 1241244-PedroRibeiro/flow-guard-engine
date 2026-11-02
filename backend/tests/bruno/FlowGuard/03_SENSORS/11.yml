@@ -1,0 +1,28 @@
+info:
+  name: "11 · AC1 · serialNumber demasiado curto (2 chars) → 422"
+  type: http
+  seq: 15
+http:
+  method: POST
+  url: "{{baseUrl}}/sensor-nodes"
+  headers:
+    - name: Authorization
+      value: "Bearer {{engineerToken}}"
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |
+      {
+        "lineId": "{{fg03LineId}}",
+        "serialNumber": "SN",
+        "sensorType": "MOTOR_VIBRATION"
+      }
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("422 Unprocessable Entity", function() {
+          expect(res.getStatus()).to.equal(422);
+          expect(res.getBody().message).to.include("at least 3");
+        });

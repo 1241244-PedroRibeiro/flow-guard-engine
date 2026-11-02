@@ -1,0 +1,28 @@
+info:
+  name: FG04 Ingest Telemetry — CRITICAL Breach
+  type: http
+  seq: 2
+http:
+  method: POST
+  url: '{{baseUrl}}/sensor-nodes/{{sensorPrimaryId}}/telemetry-readings'
+  body:
+    type: json
+    data: |-
+      { "rawValue": 7.5, "unit": "mm/s" }
+  auth:
+    type: bearer
+    token: '{{adminToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("AC2 — 201 CRITICAL, FAULT_HALTED + alert", function() {
+          expect(res.getStatus()).to.equal(201);
+          const b = res.getBody();
+          expect(b.evaluation.severity).to.equal("CRITICAL");
+          expect(b.evaluation.newLineStatus).to.equal("FAULT_HALTED");
+          expect(b.evaluation.triggeredAlertId).to.be.a("string");
+          bru.setEnvVar("criticalAlertId", b.evaluation.triggeredAlertId);
+        });
+settings:
+  encodeUrl: true

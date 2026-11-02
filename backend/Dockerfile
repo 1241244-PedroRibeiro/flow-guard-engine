@@ -40,7 +40,7 @@ RUN apk add --no-cache python3 make g++ && \
 COPY --from=builder /app/dist ./dist
 
 # Expose internal application port
-EXPOSE 3000
+EXPOSE 3050
 
 # Start command
 CMD ["node", "dist/index.js"]

@@ -1,0 +1,56 @@
+name: local
+variables:
+  - name: baseUrl
+    value: http://localhost:3050/api/v1
+  - name: adminEmail
+    value: admin@flowguard.industrial
+  - name: adminPassword
+    value: FlowGuard#2026!
+  - name: engineerEmail
+    value: eng.ribeiro@flowguard.industrial
+  - name: engineerPassword
+    value: FlowGuard#2026!
+  - name: operatorEmail
+    value: op.silva@flowguard.industrial
+  - name: operatorPassword
+    value: FlowGuard#2026!
+  - name: adminToken
+    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMTExMTExMS0xMTExLTQxMTEtODExMS0xMTExMTExMTExMDEiLCJlbWFpbCI6ImFkbWluQGZsb3dndWFyZC5pbmR1c3RyaWFsIiwicm9sZXMiOlsiQURNSU5JU1RSQVRPUiJdLCJpYXQiOjE3OTM2NDU1NTQsImV4cCI6MTc5MzY3NDM1NH0.WNiijww0g_dcL4HCHpd51ErwLHJCuAZEUGALqtsmbMk
+  - name: operatorToken
+    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzMzMzMzMzMy0zMzMzLTQzMzMtODMzMy0zMzMzMzMzMzMzMDMiLCJlbWFpbCI6Im9wLnNpbHZhQGZsb3dndWFyZC5pbmR1c3RyaWFsIiwicm9sZXMiOlsiT1BFUkFUT1IiXSwiaWF0IjoxNzkzNjQ1NTU1LCJleHAiOjE3OTM2NzQzNTV9.n5dNB0-oEEsqfQ2B20bHdgwHUZJ-KrPxjoIbosO7PfQ
+  - name: hackerEmail
+    value: hacker-1793645550@flowguard.industrial
+  - name: newUserId
+    value: acb60712-c9e8-4c26-b416-0f24b3431075
+  - name: staffEmail
+    value: eng-1793645551@flowguard.industrial
+  - name: testSectorId
+    value: 787685ad-5f3a-43b5-89c7-a74ee4ecb4cc
+  - name: testSectorCode
+    value: SEC-TEST-848
+  - name: testLineId
+    value: fa88a7a2-257d-4305-8c56-4d3cb0498210
+  - name: engineerToken
+    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyMjIyMjIyMi0yMjIyLTQyMjItODIyMi0yMjIyMjIyMjIyMDIiLCJlbWFpbCI6ImVuZy5yaWJlaXJvQGZsb3dndWFyZC5pbmR1c3RyaWFsIiwicm9sZXMiOlsiRU5HSU5FRVIiXSwiaWF0IjoxNzkzNjQ1NTU0LCJleHAiOjE3OTM2NzQzNTR9.GIFvc98WMWZ8MDJmUuq4qlbvf4GM-1aaOAFFy1XZqs0
+  - name: fg03SectorId
+    value: 6d14bf37-a64e-4f25-b729-ed787613b4e0
+  - name: runId
+    value: "1793645554463"
+  - name: fg03LineId
+    value: 52a38a5f-750a-4d2f-97ea-82febb72fb20
+  - name: sensorPrimaryId
+    value: 89acbc30-ceb2-4c1a-acf8-d3bc21d448e4
+  - name: sensorAdminId
+    value: 1e70363f-8190-4e3f-a8f6-265b03724e04
+  - name: sensorDeactivateId
+    value: a920dffe-5961-474c-adfa-2eaa93722407
+  - name: lastReadingId
+    value: 4db83c3a-4d6e-4b90-b49e-0cdd79588154
+  - name: criticalAlertId
+    value: 89be98e8-8ae2-4caa-9003-0d9564440317
+  - name: openAlertId
+    value: d040fefd-77fa-4036-beb1-7cc9c27c60b0
+  - name: newOpenAlertId
+    value: 89be98e8-8ae2-4caa-9003-0d9564440317
+  - name: sparePartId
+    value: f18a857c-7515-47cc-8805-f11af6cc4c36

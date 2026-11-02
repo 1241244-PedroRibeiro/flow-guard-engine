@@ -1,0 +1,24 @@
+info:
+  name: FG04 — Setup (Restore threshold for telemetry tests)
+  type: http
+  seq: 0
+http:
+  method: PUT
+  url: '{{baseUrl}}/sensor-nodes/{{sensorPrimaryId}}/threshold-rule'
+  body:
+    type: json
+    data: |-
+      { "warningLimit": 4.5, "criticalLimit": 5.0, "unit": "mm/s", "windowSizeSamples": 8 }
+  auth:
+    type: bearer
+    token: '{{adminToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Setup — threshold restored to 4.5 / 5.0", function() {
+          expect(res.getStatus()).to.equal(200);
+          const b = res.getBody();
+          expect(b.warningLimit).to.equal(4.5);
+          expect(b.criticalLimit).to.equal(5.0);
+        });

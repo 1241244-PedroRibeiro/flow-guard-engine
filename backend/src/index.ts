@@ -6,7 +6,7 @@ import { closeDatabasePool, getDatabasePool } from './infrastructure/persistence
 dotenv.config();
 
 async function bootstrap(): Promise<void> {
-  const port = Number(process.env.PORT ?? 3000);
+  const port = Number(process.env.PORT ?? 3050);
 
   // Initialize PostgreSQL connection pool
   getDatabasePool();

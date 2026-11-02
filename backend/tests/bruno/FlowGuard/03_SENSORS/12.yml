@@ -1,0 +1,28 @@
+info:
+  name: "12 · AC1 · serialNumber com chars inválidos (@) → 422"
+  type: http
+  seq: 16
+http:
+  method: POST
+  url: "{{baseUrl}}/sensor-nodes"
+  headers:
+    - name: Authorization
+      value: "Bearer {{engineerToken}}"
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |
+      {
+        "lineId": "{{fg03LineId}}",
+        "serialNumber": "SN@FG03-VIB",
+        "sensorType": "MOTOR_VIBRATION"
+      }
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("422 Unprocessable Entity", function() {
+          expect(res.getStatus()).to.equal(422);
+          expect(res.getBody().message).to.include("uppercase letters");
+        });

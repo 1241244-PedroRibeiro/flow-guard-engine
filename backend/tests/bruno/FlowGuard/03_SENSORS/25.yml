@@ -1,0 +1,21 @@
+info:
+  name: "25 · AC3 · List filtered by isActive=true (pre-deactivation) → 200"
+  type: http
+  seq: 29
+http:
+  method: GET
+  url: "{{baseUrl}}/sensor-nodes?lineId={{fg03LineId}}&isActive=true"
+  headers:
+    - name: Authorization
+      value: "Bearer {{engineerToken}}"
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("200 OK", function() {
+          expect(res.getStatus()).to.equal(200);
+          expect(res.getBody().length).to.equal(3);
+          res.getBody().forEach(function(s) {
+            expect(s.isActive).to.equal(true);
+          });
+        });

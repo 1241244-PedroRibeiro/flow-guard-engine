@@ -1,0 +1,24 @@
+info:
+  name: 05 Update Line Stale Write (409)
+  type: http
+  seq: 5
+http:
+  method: PATCH
+  url: '{{baseUrl}}/conveyor-lines/{{testLineId}}/operational-status'
+  body:
+    type: json
+    data: |-
+      {
+        "operationalStatus": "RUNNING",
+        "expectedVersion": 1
+      }
+  auth:
+    type: bearer
+    token: '{{adminToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status 409 Conflict due to version mismatch", function() {
+          expect(res.getStatus()).to.equal(409);
+        });

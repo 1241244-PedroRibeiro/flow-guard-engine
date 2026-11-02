@@ -1,0 +1,25 @@
+info:
+  name: "05 · AC1 · No auth token → 401"
+  type: http
+  seq: 9
+http:
+  method: POST
+  url: "{{baseUrl}}/sensor-nodes"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |
+      {
+        "lineId": "{{fg03LineId}}",
+        "serialNumber": "SN-FG03-{{runId}}-NOTOKEN",
+        "sensorType": "MOTOR_VIBRATION"
+      }
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("401 Unauthorized", function() {
+          expect(res.getStatus()).to.equal(401);
+        });
