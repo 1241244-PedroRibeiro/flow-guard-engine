@@ -15,7 +15,7 @@ import { TopologyModule } from './topology.module';
 import { SensorModule } from './sensor.module';
 import { SecurityModule } from './security.module';
 import { AlertModule } from './alert.module';
-
+import { StockModule } from './stock.module';
 
 @Module({
   imports: [
@@ -23,6 +23,7 @@ import { AlertModule } from './alert.module';
     SensorModule, // <-- Adicionado aqui
     SecurityModule, // <-- Adicionado aqui
     AlertModule, // <-- Adicionado aqui
+    StockModule, // <-- Adicionado aqui
   ],
   controllers: [HealthController, AuthController, UserController],
   providers: [
