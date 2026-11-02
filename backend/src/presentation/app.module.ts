@@ -14,6 +14,7 @@ import { pool } from '../infrastructure/persistence/connection';
 import { TopologyModule } from './topology.module';
 import { SensorModule } from './sensor.module';
 import { SecurityModule } from './security.module';
+import { AlertModule } from './alert.module';
 
 
 @Module({
@@ -21,6 +22,7 @@ import { SecurityModule } from './security.module';
     TopologyModule, // <-- Adicionado aqui
     SensorModule, // <-- Adicionado aqui
     SecurityModule, // <-- Adicionado aqui
+    AlertModule, // <-- Adicionado aqui
   ],
   controllers: [HealthController, AuthController, UserController],
   providers: [
