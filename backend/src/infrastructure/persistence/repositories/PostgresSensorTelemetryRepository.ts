@@ -2,11 +2,17 @@ import { Pool } from 'pg';
 import { TelemetryValue } from '../../../domain/common/TelemetryValue';
 import { SensorNode } from '../../../domain/sensor/SensorNode';
 import { ThresholdRule } from '../../../domain/sensor/ThresholdRule';
+import { TelemetryReading } from '../../../domain/sensor/TelemetryReading';
+import { ConveyorLine } from '../../../domain/topology/ConveyorLine';
+import { LineStatus } from '../../../domain/topology/LineStatus';
 import {
     ISensorTelemetryRepository,
     SensorFilter,
+    SensorIngestionContext,
+    IngestTelemetryAtomicallyCommand,
 } from '../../../application/sensor/ports/ISensorTelemetryRepository';
 import { SensorNodeMapper, SensorNodeRow } from '../mappers/SensorNodeMapper';
+import { TelemetryReadingMapper, TelemetryReadingRow } from '../mappers/TelemetryReadingMapper';
 
 const SELECT_WITH_RULE = `
   SELECT
@@ -22,8 +28,22 @@ const SELECT_WITH_RULE = `
   LEFT JOIN threshold_rules tr ON tr.sensor_id = sn.id
 `;
 
+interface ConveyorLineRow {
+    id: string;
+    sector_id: string;
+    line_code: string;
+    name: string;
+    operational_status: string;
+    is_active: boolean;
+    version: number;
+}
+
 export class PostgresSensorTelemetryRepository implements ISensorTelemetryRepository {
     constructor(private readonly pool: Pool) {}
+
+    // --------------------------------------------------------------
+    // EXISTING METHODS (FG03) — preservados sem alterações
+    // --------------------------------------------------------------
 
     async findById(id: string): Promise<SensorNode | null> {
         const result = await this.pool.query<SensorNodeRow>(
@@ -139,11 +159,158 @@ export class PostgresSensorTelemetryRepository implements ISensorTelemetryReposi
         return ThresholdRule.reconstitute(
             r.id,
             r.sensor_id,
-            // CORREÇÃO #4 — cast explícito
             TelemetryValue.create(Number(r.warning_limit), r.unit),
             TelemetryValue.create(Number(r.critical_limit), r.unit),
             Number(r.window_size_samples),
             Number(r.version),
         );
+    }
+
+    // --------------------------------------------------------------
+    // NEW FG04 METHODS
+    // --------------------------------------------------------------
+
+    /**
+     * Filter 4 context loader.
+     * Reuses SensorNodeMapper (which already understands `tr_*` aliases) to obtain
+     * SensorNode + embedded ThresholdRule, then loads the parent ConveyorLine via
+     * ConveyorLine.reconstitute to avoid column-name collision between `sensor_nodes`
+     * (`is_active`, `created_at`, `updated_at`) and `conveyor_lines` (`is_active`,
+     * `version`, `updated_at`).
+     */
+    async findIngestionContext(sensorId: string): Promise<SensorIngestionContext | null> {
+        const sensorResult = await this.pool.query<SensorNodeRow>(
+            `${SELECT_WITH_RULE} WHERE sn.id = $1`,
+            [sensorId],
+        );
+        if (sensorResult.rowCount === 0) return null;
+
+        const sensor = SensorNodeMapper.toDomain(sensorResult.rows[0]);
+
+        const lineResult = await this.pool.query<ConveyorLineRow>(
+            `SELECT id, sector_id, line_code, name, operational_status, is_active, version
+               FROM conveyor_lines
+              WHERE id = $1`,
+            [sensor.getLineId()],
+        );
+        if (lineResult.rowCount === 0) return null;
+
+        const lr = lineResult.rows[0];
+        const line = ConveyorLine.reconstitute({
+            id: lr.id,
+            sectorId: lr.sector_id,
+            lineCode: lr.line_code,
+            name: lr.name,
+            operationalStatus: lr.operational_status as LineStatus,
+            isActive: lr.is_active,
+            version: Number(lr.version),
+        });
+
+        return {
+            sensor,
+            thresholdRule: sensor.getThresholdRule(),
+            line,
+        };
+    }
+
+    /**
+     * Returns up to `limit` most recent raw values for a sensor, in chronological
+     * order (oldest → newest) so the caller can feed them into the Ring Buffer
+     * deterministically.
+     */
+    async findRecentRawValues(sensorId: string, limit: number): Promise<number[]> {
+        const { rows } = await this.pool.query(
+            `SELECT raw_value
+               FROM telemetry_readings
+              WHERE sensor_id = $1
+              ORDER BY recorded_at DESC
+              LIMIT $2`,
+            [sensorId, limit],
+        );
+        return rows.map((r) => Number(r.raw_value)).reverse();
+    }
+
+    /**
+     * AC2 atomic ingestion — one BEGIN/COMMIT/ROLLBACK envelope guarantees that
+     * reading + alert + line-status transition are all-or-nothing (KB §23.1).
+     */
+    async ingestTelemetryAtomically(cmd: IngestTelemetryAtomicallyCommand): Promise<void> {
+        const client = await this.pool.connect();
+        try {
+            await client.query('BEGIN');
+
+            await client.query(
+                `INSERT INTO telemetry_readings
+                   (id, sensor_id, raw_value, moving_average, moving_median, unit, window_sample_count, recorded_at)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+                [
+                    cmd.reading.id,
+                    cmd.reading.sensorId,
+                    cmd.reading.rawValue,
+                    cmd.reading.movingAverage,
+                    cmd.reading.movingMedian,
+                    cmd.reading.unit,
+                    cmd.reading.windowSampleCount,
+                    cmd.reading.recordedAt,
+                ],
+            );
+
+            if (cmd.alert) {
+                const a = cmd.alert;
+                await client.query(
+                    `INSERT INTO anomaly_alerts
+                       (id, sensor_id, line_id, reading_id, severity, status, message, triggered_at)
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+                    [a.id, a.sensorId, a.lineId, a.readingId, a.severity, a.status, a.message, a.triggeredAt],
+                );
+            }
+
+            if (cmd.alert && cmd.newLineStatusIfBreach) {
+                await client.query(
+                    `UPDATE conveyor_lines
+                        SET operational_status = $1,
+                            is_active = CASE WHEN $1 = 'DEACTIVATED' THEN FALSE ELSE is_active END,
+                            version = version + 1,
+                            updated_at = NOW()
+                      WHERE id = $2
+                        AND operational_status <> $1`,
+                    [cmd.newLineStatusIfBreach, cmd.alert.lineId],
+                );
+                // rowCount === 0 → line already in target status; idempotent, safe to proceed
+            }
+
+            await client.query('COMMIT');
+        } catch (err) {
+            await client.query('ROLLBACK');
+            throw err;
+        } finally {
+            client.release();
+        }
+    }
+
+    async findReadingsBySensorIdPaginated(
+        sensorId: string,
+        page: number,
+        pageSize: number,
+    ): Promise<{ items: TelemetryReading[]; total: number }> {
+        const offset = (page - 1) * pageSize;
+        const [readingsRes, countRes] = await Promise.all([
+            this.pool.query<TelemetryReadingRow>(
+                `SELECT id, sensor_id, raw_value, moving_average, moving_median, unit, window_sample_count, recorded_at
+                   FROM telemetry_readings
+                  WHERE sensor_id = $1
+                  ORDER BY recorded_at DESC
+                  LIMIT $2 OFFSET $3`,
+                [sensorId, pageSize, offset],
+            ),
+            this.pool.query<{ total: number }>(
+                `SELECT COUNT(*)::int AS total FROM telemetry_readings WHERE sensor_id = $1`,
+                [sensorId],
+            ),
+        ]);
+        return {
+            items: readingsRes.rows.map(TelemetryReadingMapper.toDomain),
+            total: countRes.rows[0].total,
+        };
     }
 }
