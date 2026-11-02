@@ -1,0 +1,21 @@
+info:
+  name: FG05 Acknowledge Conflict (409)
+  type: http
+  seq: 4
+http:
+  method: POST
+  url: '{{baseUrl}}/anomaly-alerts/{{openAlertId}}/acknowledge'
+  body:
+    type: json
+    data: |-
+      { "diagnosticNote": "Trying to acknowledge twice." }
+  auth:
+    type: bearer
+    token: '{{operatorToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("AC4 — 409 Conflict on second acknowledge", function() {
+          expect(res.getStatus()).to.equal(409);
+        });

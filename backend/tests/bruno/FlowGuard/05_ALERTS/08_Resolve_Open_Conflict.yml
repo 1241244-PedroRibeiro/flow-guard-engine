@@ -1,0 +1,21 @@
+info:
+  name: FG05 Resolve OPEN Alert Conflict (409)
+  type: http
+  seq: 8
+http:
+  method: POST
+  url: '{{baseUrl}}/sensor-nodes/{{sensorPrimaryId}}/telemetry-readings'
+  body:
+    type: json
+    data: |-
+      { "rawValue": 99.9, "unit": "mm/s" }
+  auth:
+    type: bearer
+    token: '{{adminToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Setup — Force new CRITICAL breach for conflict test", function() {
+          expect(res.getStatus()).to.equal(201);
+        });

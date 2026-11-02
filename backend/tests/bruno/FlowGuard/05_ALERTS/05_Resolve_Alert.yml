@@ -1,0 +1,20 @@
+info:
+  name: FG05 Resolve Alert (ENGINEER)
+  type: http
+  seq: 5
+http:
+  method: POST
+  url: '{{baseUrl}}/anomaly-alerts/{{openAlertId}}/resolve'
+  auth:
+    type: bearer
+    token: '{{engineerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("AC3 — 200 OK, status RESOLVED", function() {
+          expect(res.getStatus()).to.equal(200);
+          const b = res.getBody();
+          expect(b.status).to.equal("RESOLVED");
+          expect(b.resolvedAt).to.be.a("string");
+        });

@@ -1,0 +1,25 @@
+info:
+  name: FG05 Acknowledge Alert (OPERATOR)
+  type: http
+  seq: 3
+http:
+  method: POST
+  url: '{{baseUrl}}/anomaly-alerts/{{openAlertId}}/acknowledge'
+  body:
+    type: json
+    data: |-
+      { "diagnosticNote": "Inspecting drive motor mount bolts on line." }
+  auth:
+    type: bearer
+    token: '{{operatorToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("AC2 — 200 OK, status ACKNOWLEDGED", function() {
+          expect(res.getStatus()).to.equal(200);
+          const b = res.getBody();
+          expect(b.status).to.equal("ACKNOWLEDGED");
+          expect(b.diagnosticNote).to.equal("Inspecting drive motor mount bolts on line.");
+          expect(b.acknowledgedBy).to.be.a("string");
+        });

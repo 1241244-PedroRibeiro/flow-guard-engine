@@ -1,0 +1,17 @@
+info:
+  name: FG05 Resolve RBAC (OPERATOR gets 403)
+  type: http
+  seq: 9
+http:
+  method: POST
+  url: '{{baseUrl}}/anomaly-alerts/{{openAlertId}}/resolve'
+  auth:
+    type: bearer
+    token: '{{operatorToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("403 Forbidden — OPERATOR cannot resolve", function() {
+          expect(res.getStatus()).to.equal(403);
+        });

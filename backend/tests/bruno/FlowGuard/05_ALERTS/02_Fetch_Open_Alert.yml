@@ -1,0 +1,21 @@
+info:
+  name: FG05 List Open Alerts & Capture ID
+  type: http
+  seq: 2
+http:
+  method: GET
+  url: '{{baseUrl}}/anomaly-alerts?status=OPEN&page=1&pageSize=10'
+  auth:
+    type: bearer
+    token: '{{adminToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("AC1 — 200 OK with paginated alerts", function() {
+          expect(res.getStatus()).to.equal(200);
+          const b = res.getBody();
+          expect(b.items).to.be.an("array");
+          expect(b.items.length).to.be.at.least(1);
+          bru.setEnvVar("openAlertId", b.items[0].id);
+        });

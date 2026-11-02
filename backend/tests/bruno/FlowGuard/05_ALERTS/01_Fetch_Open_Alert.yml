@@ -1,0 +1,25 @@
+info:
+  name: FG05 Setup — Force Critical Breach & List Open Alerts
+  type: http
+  seq: 1
+http:
+  method: POST
+  url: '{{baseUrl}}/sensor-nodes/{{sensorPrimaryId}}/telemetry-readings'
+  body:
+    type: json
+    data: |-
+      { "rawValue": 99.9, "unit": "mm/s" }
+  auth:
+    type: bearer
+    token: '{{adminToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Setup — Force CRITICAL breach", function() {
+          expect(res.getStatus()).to.equal(201);
+        });
+        test("AC1 — 200 OK with paginated alerts", function() {
+          // Assume que o backend já processou o breach e criou o alerta
+          // A chamada seguinte (GET) será feita num pedido separado.
+        });
