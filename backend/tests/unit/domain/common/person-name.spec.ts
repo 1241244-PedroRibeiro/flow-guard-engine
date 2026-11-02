@@ -3,10 +3,10 @@ import { DomainError } from '../../../../src/domain/common/exceptions/DomainErro
 
 describe('PersonName Value Object', () => {
   it('trims and preserves case', () => {
-    const name = PersonName.create('  Pedro  ', ' Ribeiro ');
-    expect(name.firstName).toBe('Pedro');
-    expect(name.lastName).toBe('Ribeiro');
-    expect(name.fullName()).toBe('Pedro Ribeiro');
+    const name = PersonName.create('  Alice  ', ' Smith ');
+    expect(name.firstName).toBe('Alice');
+    expect(name.lastName).toBe('Smith');
+    expect(name.fullName()).toBe('Alice Smith');
   });
 
   it.each([
