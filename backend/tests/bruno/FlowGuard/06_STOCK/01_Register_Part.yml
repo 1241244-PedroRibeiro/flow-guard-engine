@@ -1,0 +1,23 @@
+info:
+  name: FG06 Register Spare Part
+  type: http
+  seq: 1
+http:
+  method: POST
+  url: '{{baseUrl}}/spare-parts'
+  body:
+    type: json
+    data: |-
+      { "partCode": "PRT-TEST-{{runId}}", "name": "Test Bearing", "initialStockUnits": 10 }
+  auth:
+    type: bearer
+    token: '{{engineerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("AC1 — 201 Created", function() {
+          expect(res.getStatus()).to.equal(201);
+          expect(res.getBody().stockUnits).to.equal(10);
+          bru.setEnvVar("sparePartId", res.getBody().id);
+        });

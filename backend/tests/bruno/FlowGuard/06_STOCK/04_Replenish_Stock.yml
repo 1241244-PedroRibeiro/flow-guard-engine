@@ -1,0 +1,22 @@
+info:
+  name: FG06 Replenish Stock
+  type: http
+  seq: 4
+http:
+  method: POST
+  url: '{{baseUrl}}/spare-parts/{{sparePartId}}/replenish'
+  body:
+    type: json
+    data: |-
+      { "units": 5, "reason": "Restock" }
+  auth:
+    type: bearer
+    token: '{{engineerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("AC3 — 200 OK, stock increased", function() {
+          expect(res.getStatus()).to.equal(200);
+          expect(res.getBody().stockUnits).to.equal(12);
+        });
