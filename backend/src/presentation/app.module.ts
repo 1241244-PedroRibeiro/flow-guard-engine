@@ -19,11 +19,11 @@ import { StockModule } from './stock.module';
 
 @Module({
   imports: [
-    TopologyModule, // <-- Adicionado aqui
-    SensorModule, // <-- Adicionado aqui
-    SecurityModule, // <-- Adicionado aqui
-    AlertModule, // <-- Adicionado aqui
-    StockModule, // <-- Adicionado aqui
+    TopologyModule,
+    SensorModule,
+    SecurityModule,
+    AlertModule,
+    StockModule,
   ],
   controllers: [HealthController, AuthController, UserController],
   providers: [

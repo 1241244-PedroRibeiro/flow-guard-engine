@@ -15,7 +15,7 @@ runtime:
         test("Status 204 No Content", function() {
           expect(res.getStatus()).to.equal(204);
         });
-        // Depois de apagar a linha, o setor pode ser apagado
+        // After deleting the conveyor line, we should also delete the associated plant sector to clean up the test data.
         const sectorDelete = await bru.sendRequest({
           method: 'DELETE',
           url: `${bru.getEnvVar('baseUrl')}/plant-sectors/${bru.getEnvVar('testSectorId')}`,

@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: flowguard_password
       POSTGRES_DB: flowguard_db
     ports:
-      - '5433:5432' # <--- CORRIGIDO: Host 5433 mapeia para o container 5432
+      - '5433:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/src/infrastructure/persistence/migrations:/docker-entrypoint-initdb.d:ro
@@ -35,7 +35,7 @@ services:
       PORT: 3050
       NODE_ENV: production
       DB_HOST: postgres
-      DB_PORT: 5432 # <--- CORRIGIDO: Dentro da rede Docker, o Postgres ouve na 5432
+      DB_PORT: 5432
       DB_USER: flowguard_user
       DB_PASSWORD: flowguard_password
       DB_NAME: flowguard_db

@@ -59,8 +59,7 @@ export class SensorManagementService {
         const existingRule = sensor.getThresholdRule();
         let rule: ThresholdRule;
 
-        // CORREÇÃO: Se a regra já existir, aplica updateLimits (incrementa version).
-        // Se não existir, cria uma nova com version = 1.
+        // CORRECT: If a rule exists, update it; otherwise, create a new one. This ensures that the sensor always has a valid threshold rule.
         if (existingRule) {
             rule = existingRule.updateLimits(
                 warningLimit,
